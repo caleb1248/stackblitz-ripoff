@@ -1,0 +1,40 @@
+{
+  "name": "stackblitz-ripoff",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.92.0",
+    "vite": "^5.4.1"
+  },
+  "dependencies": {
+    "@codingame/esbuild-import-meta-url-plugin": "^1.0.2",
+    "@codingame/monaco-vscode-configuration-service-override": "^8.0.4",
+    "@codingame/monaco-vscode-css-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-css-language-features-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-explorer-service-override": "^8.0.4",
+    "@codingame/monaco-vscode-extensions-service-override": "^8.0.4",
+    "@codingame/monaco-vscode-html-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-html-language-features-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-javascript-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-json-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-json-language-features-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-languages-service-override": "^8.0.4",
+    "@codingame/monaco-vscode-model-service-override": "^8.0.4",
+    "@codingame/monaco-vscode-search-service-override": "^8.0.4",
+    "@codingame/monaco-vscode-textmate-service-override": "^8.0.4",
+    "@codingame/monaco-vscode-theme-defaults-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-theme-service-override": "^8.0.4",
+    "@codingame/monaco-vscode-typescript-basics-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-typescript-language-features-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-views-service-override": "^8.0.4",
+    "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@^8.0.4",
+    "typescript": "^5.5.4",
+    "vscode": "npm:@codingame/monaco-vscode-api@^8.0.4"
+  }
+}

@@ -1,0 +1,70 @@
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body,
+div#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--vscode-editorWidget-background);
+  color: var(--vscode-editorWidget-foreground);
+  margin: 0;
+  box-sizing: border-box;
+}
+
+#editors {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  border: 1px solid var(--vscode-editorWidget-border);
+  box-sizing: border-box;
+}
+
+#panel {
+  display: flex;
+  flex: 1;
+  border: 1px solid var(--vscode-editorWidget-border);
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.standalone-editor {
+  width: 100%;
+  height: 55vh;
+  box-sizing: border-box;
+}
+
+#titleBar {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+}
+
+#banner {
+  flex: none;
+  box-sizing: border-box;
+}
+
+#workbench-top {
+  display: flex;
+  flex: 2;
+  min-height: 0;
+  box-sizing: border-box;
+  height: 100%;
+}
