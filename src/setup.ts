@@ -1,14 +1,4 @@
 import { initialize as initializeMonacoServices, getService, IWorkbenchLayoutService } from 'vscode/services';
-import getModelServiceOverride from '@codingame/monaco-vscode-model-service-override';
-import getTextmateServiceOverride from '@codingame/monaco-vscode-textmate-service-override';
-import getThemeServiceOverride from '@codingame/monaco-vscode-theme-service-override';
-import getLanguagesServiceOverride from '@codingame/monaco-vscode-languages-service-override';
-import getExtensionServiceOverride from '@codingame/monaco-vscode-extensions-service-override';
-import getFilesServiceOverride, {
-  InMemoryFileSystemProvider,
-  registerFileSystemOverlay,
-} from '@codingame/monaco-vscode-files-service-override';
-import getConfigurationServiceOverride from '@codingame/monaco-vscode-configuration-service-override';
 import getViewsServiceOverride, {
   attachPart,
   Parts,
@@ -16,9 +6,22 @@ import getViewsServiceOverride, {
   onPartVisibilityChange,
   isEditorPartVisible,
 } from '@codingame/monaco-vscode-views-service-override';
+
+import getFilesServiceOverride, {
+  InMemoryFileSystemProvider,
+  registerFileSystemOverlay,
+} from '@codingame/monaco-vscode-files-service-override';
+
+import getModelServiceOverride from '@codingame/monaco-vscode-model-service-override';
+import getTextmateServiceOverride from '@codingame/monaco-vscode-textmate-service-override';
+import getThemeServiceOverride from '@codingame/monaco-vscode-theme-service-override';
+import getLanguagesServiceOverride from '@codingame/monaco-vscode-languages-service-override';
+import getExtensionServiceOverride from '@codingame/monaco-vscode-extensions-service-override';
+import getConfigurationServiceOverride from '@codingame/monaco-vscode-configuration-service-override';
 import getQuickAccessServiceOverride from '@codingame/monaco-vscode-quickaccess-service-override';
 import getExplorerServiceOverride from '@codingame/monaco-vscode-explorer-service-override';
 import getSearchServiceOverride from '@codingame/monaco-vscode-search-service-override';
+import getPreferencesServiceOverride from '@codingame/monaco-vscode-preferences-service-override';
 
 import { createHorizontalSplitView, SplitViewView } from './split-view-stuff';
 
@@ -80,6 +83,7 @@ initializeMonacoServices(
     }),
     ...getSearchServiceOverride(),
     ...getExplorerServiceOverride(),
+    ...getPreferencesServiceOverride(),
   },
   document.body,
   {},
@@ -127,5 +131,5 @@ for (const config of [
 createHorizontalSplitView(
   document.getElementById('workbench-top')!,
   new SplitViewView(document.getElementById('sidebar')!),
-  new SplitViewView(document.getElementById('editors')!)
+  new SplitViewView(document.getElementById('editors')!, 100)
 );
