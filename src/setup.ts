@@ -124,4 +124,8 @@ for (const config of [
   });
 }
 
-createHorizontalSplitView(document.getElementById('workbench-top')!, new SplitViewView(), new SplitViewView(document.createElement('div'));
+createHorizontalSplitView(
+  document.getElementById('workbench-top')!,
+  new SplitViewView(document.getElementById('sidebar')!),
+  new SplitViewView(document.getElementById('editors')!)
+);

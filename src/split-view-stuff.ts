@@ -9,14 +9,10 @@ export class SplitViewView implements IView {
 
   constructor(element: HTMLElement) {
     this.element = element;
-    this.element.textContent = 'My View';
   }
 
   layout(size: number, offset: number): void {
     this.element.style.width = `${size}px`;
-    this.element.style.height = `${size}px`;
-    this.element.style.left = `${offset}px`;
-    this.element.style.top = `${offset}px`;
   }
 }
 
@@ -27,6 +23,7 @@ export function createHorizontalSplitView(container: HTMLElement, child1: IView,
 
   splitView.addView(child1, Sizing.Distribute);
   splitView.addView(child2, Sizing.Distribute);
+  splitView.layout(container.clientWidth);
 
   return splitView;
 }
