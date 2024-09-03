@@ -8,26 +8,35 @@ import getViewsServiceOverride, {
 } from '@codingame/monaco-vscode-views-service-override';
 
 import getFilesServiceOverride, {
-  InMemoryFileSystemProvider,
-  registerFileSystemOverlay,
+  // InMemoryFileSystemProvider,
+  // registerFileSystemOverlay,
+  registerHTMLFileSystemProvider,
+  createIndexedDBProviders,
+  initFile,
 } from '@codingame/monaco-vscode-files-service-override';
+
+import getConfigurationServiceOverride, {
+  IStoredWorkspace,
+} from '@codingame/monaco-vscode-configuration-service-override';
 
 import getModelServiceOverride from '@codingame/monaco-vscode-model-service-override';
 import getTextmateServiceOverride from '@codingame/monaco-vscode-textmate-service-override';
 import getThemeServiceOverride from '@codingame/monaco-vscode-theme-service-override';
 import getLanguagesServiceOverride from '@codingame/monaco-vscode-languages-service-override';
 import getExtensionServiceOverride from '@codingame/monaco-vscode-extensions-service-override';
-import getConfigurationServiceOverride from '@codingame/monaco-vscode-configuration-service-override';
 import getQuickAccessServiceOverride from '@codingame/monaco-vscode-quickaccess-service-override';
 import getExplorerServiceOverride from '@codingame/monaco-vscode-explorer-service-override';
 import getSearchServiceOverride from '@codingame/monaco-vscode-search-service-override';
 import getPreferencesServiceOverride from '@codingame/monaco-vscode-preferences-service-override';
+import getDialogServiceOverride from '@codingame/monaco-vscode-dialogs-service-override';
 
 import { createHorizontalSplitView, SplitViewView } from './split-view-stuff';
+import * as monaco from 'monaco-editor';
 
 import 'vscode/localExtensionHost';
 
 import { Worker } from './tools/crossOriginWorker';
+import { workerConfig } from './tools/extHostWorker';
 
 export type WorkerLoader = () => Worker;
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
@@ -63,13 +72,25 @@ window.MonacoEnvironment = {
   },
 };
 
-const fsProvider = new InMemoryFileSystemProvider();
-
-registerFileSystemOverlay(1, fsProvider);
+// const fsProvider = new InMemoryFileSystemProvider();
+await createIndexedDBProviders();
+const workspaceFile = monaco.Uri.from({ scheme: 'tmp', path: '/test.code-workspace' });
+await initFile(
+  workspaceFile,
+  JSON.stringify(
+    <IStoredWorkspace>{
+      folders: [],
+    },
+    null,
+    2
+  )
+);
+registerHTMLFileSystemProvider();
+// registerFileSystemOverlay(1, fsProvider);
 
 initializeMonacoServices(
   {
-    ...getExtensionServiceOverride(),
+    ...getExtensionServiceOverride(workerConfig),
     ...getModelServiceOverride(),
     ...getTextmateServiceOverride(),
     ...getThemeServiceOverride(),
@@ -84,9 +105,19 @@ initializeMonacoServices(
     ...getSearchServiceOverride(),
     ...getExplorerServiceOverride(),
     ...getPreferencesServiceOverride(),
+    ...getDialogServiceOverride(),
   },
   document.body,
-  {},
+  {
+    workspaceProvider: {
+      trusted: true,
+      async open() {
+        window.open(window.location.href);
+        return true;
+      },
+      workspace: { workspaceUri: workspaceFile },
+    },
+  },
   {}
 );
 
@@ -124,6 +155,9 @@ for (const config of [
   }
 
   onPartVisibilityChange(config.part, (visible) => {
+    if (config.part === Parts.SIDEBAR_PART) {
+      document.querySelector<HTMLElement>(config.element)!.style.width = visible ? '0' : '200px';
+    }
     document.querySelector<HTMLDivElement>(config.element)!.style.display = visible ? 'block' : 'none';
   });
 }

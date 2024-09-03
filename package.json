@@ -17,6 +17,7 @@
     "@codingame/monaco-vscode-configuration-service-override": "^8.0.4",
     "@codingame/monaco-vscode-css-default-extension": "^8.0.4",
     "@codingame/monaco-vscode-css-language-features-default-extension": "^8.0.4",
+    "@codingame/monaco-vscode-dialogs-service-override": "^8.0.4",
     "@codingame/monaco-vscode-explorer-service-override": "^8.0.4",
     "@codingame/monaco-vscode-extensions-service-override": "^8.0.4",
     "@codingame/monaco-vscode-html-default-extension": "^8.0.4",

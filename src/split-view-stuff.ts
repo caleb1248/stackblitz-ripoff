@@ -16,9 +16,10 @@ export class SplitViewView implements IView {
   constructor(element: HTMLElement, minimumSize?: number) {
     this.element = element;
     this.minimumSize = minimumSize ?? 0;
+    this.layout(200, 0);
   }
 
-  layout(size: number, offset: number): void {
+  layout(size: number, _offset: number): void {
     this.element.style.width = `${size}px`;
   }
 }
