@@ -1,5 +1,6 @@
 import './style.css';
 import './setup';
+
 import '@codingame/monaco-vscode-theme-defaults-default-extension';
 
 import '@codingame/monaco-vscode-javascript-default-extension';

@@ -19,6 +19,9 @@ import getViewsServiceOverride, {
 import getQuickAccessServiceOverride from '@codingame/monaco-vscode-quickaccess-service-override';
 import getExplorerServiceOverride from '@codingame/monaco-vscode-explorer-service-override';
 import getSearchServiceOverride from '@codingame/monaco-vscode-search-service-override';
+
+import { createHorizontalSplitView, SplitViewView } from './split-view-stuff';
+
 import 'vscode/localExtensionHost';
 
 import { Worker } from './tools/crossOriginWorker';
@@ -97,8 +100,8 @@ appDiv.innerHTML = `
   </div>
 </div>`;
 
-const layoutService = await getService(IWorkbenchLayoutService);
-// window.layoutService = layoutService;
+const layoutService = await getService(IWorkbenchLayoutService); // Bug happens without this line
+layoutService;
 for (const config of [
   {
     part: Parts.SIDEBAR_PART,
@@ -120,3 +123,5 @@ for (const config of [
     document.querySelector<HTMLDivElement>(config.element)!.style.display = visible ? 'block' : 'none';
   });
 }
+
+createHorizontalSplitView(document.getElementById('workbench-top')!, new SplitViewView(), new SplitViewView(document.createElement('div'));
