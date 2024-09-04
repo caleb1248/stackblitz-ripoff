@@ -38,6 +38,7 @@ import 'vscode/localExtensionHost';
 
 import { Worker } from './tools/crossOriginWorker';
 import { workerConfig } from './tools/extHostWorker';
+import { LayoutPriority } from 'vscode/vscode/vs/base/browser/ui/splitview/splitview';
 
 export type WorkerLoader = () => Worker;
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
@@ -140,8 +141,8 @@ appDiv.innerHTML = `
 const layoutService = await getService(IWorkbenchLayoutService); // Bug happens without this line
 layoutService;
 
-const sidebarView = new SplitViewView(document.getElementById('sidebar')!);
-const editorsView = new SplitViewView(document.getElementById('editors')!, 100);
+const sidebarView = new SplitViewView(document.getElementById('sidebar')!, { minimumSize: 170, priority: 'low' });
+const editorsView = new SplitViewView(document.getElementById('editors')!, { minimumSize: 100 });
 
 const splitView = createHorizontalSplitView(document.querySelector('#workbench-top')!, sidebarView, editorsView);
 splitView;
@@ -164,7 +165,7 @@ for (const config of [
     }
 
     onPartVisibilityChange(config.part, (visible) => {
-      document.querySelector<HTMLElement>(config.element)!.style.width = visible ? '0' : '200px';
+      sidebarView.layout(visible ? 170 : 0);
     });
   }
 
