@@ -23,7 +23,9 @@ export class SplitViewView implements IView {
   snap?: boolean | undefined;
 
   readonly onDidChange = new Emitter<number | undefined>().event;
-  readonly onLayout = new Emitter<(newSize: number) => void>().event;
+  readonly onLayout = new Emitter<number>().event;
+  private readonly onVisibilityChangeEmitter = new Emitter<boolean>();
+  readonly onVisibilityChange = this.onVisibilityChangeEmitter.event;
 
   constructor(element: HTMLElement, options: ISplitViewViewOptions = {}) {
     this.element = element;
@@ -45,6 +47,10 @@ export class SplitViewView implements IView {
 
   layout(size: number): void {
     this.element.style.width = `${size}px`;
+  }
+
+  setVisible(visible: boolean): void {
+    this.onVisibilityChangeEmitter.fire(visible);
   }
 }
 

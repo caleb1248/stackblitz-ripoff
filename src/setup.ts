@@ -5,6 +5,7 @@ import getViewsServiceOverride, {
   isPartVisibile,
   onPartVisibilityChange,
   isEditorPartVisible,
+  setPartVisibility,
 } from '@codingame/monaco-vscode-views-service-override';
 
 import getFilesServiceOverride, {
@@ -141,7 +142,11 @@ appDiv.innerHTML = `
 const layoutService = await getService(IWorkbenchLayoutService); // Bug happens without this line
 layoutService;
 
-const sidebarView = new SplitViewView(document.getElementById('sidebar')!, { minimumSize: 170, priority: 'low' });
+const sidebarView = new SplitViewView(document.getElementById('sidebar')!, {
+  minimumSize: 170,
+  priority: 'low',
+  snap: true,
+});
 const editorsView = new SplitViewView(document.getElementById('editors')!, { minimumSize: 100 });
 
 const splitView = createHorizontalSplitView(document.querySelector('#workbench-top')!, sidebarView, editorsView);
@@ -161,15 +166,21 @@ for (const config of [
 
   if (config.part === Parts.SIDEBAR_PART) {
     if (!isPartVisibile(config.part)) {
-      sidebarView.layout(0);
+      splitView.resizeView(0, 0);
     }
 
     onPartVisibilityChange(config.part, (visible) => {
+      splitView.setViewVisible(0, visible);
+      splitView.resizeView(0, visible ? 170 : 0);
       sidebarView.layout(visible ? 170 : 0);
     });
-  }
 
-  onPartVisibilityChange(config.part, (visible) => {
-    document.querySelector<HTMLDivElement>(config.element)!.style.display = visible ? 'block' : 'none';
-  });
+    sidebarView.onVisibilityChange((visible) => {
+      setPartVisibility(config.part as Parts.SIDEBAR_PART, visible);
+    });
+  } else {
+    onPartVisibilityChange(config.part, (visible) => {
+      document.querySelector<HTMLDivElement>(config.element)!.style.display = visible ? 'block' : 'none';
+    });
+  }
 }
