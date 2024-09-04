@@ -29,6 +29,7 @@ import getExplorerServiceOverride from '@codingame/monaco-vscode-explorer-servic
 import getSearchServiceOverride from '@codingame/monaco-vscode-search-service-override';
 import getPreferencesServiceOverride from '@codingame/monaco-vscode-preferences-service-override';
 import getDialogServiceOverride from '@codingame/monaco-vscode-dialogs-service-override';
+import getMarkersServiceOverride from '@codingame/monaco-vscode-markers-service-override';
 
 import { createHorizontalSplitView, SplitViewView } from './split-view-stuff';
 import * as monaco from 'monaco-editor';
@@ -106,6 +107,7 @@ initializeMonacoServices(
     ...getExplorerServiceOverride(),
     ...getPreferencesServiceOverride(),
     ...getDialogServiceOverride(),
+    ...getMarkersServiceOverride(),
   },
   document.body,
   {
@@ -137,6 +139,12 @@ appDiv.innerHTML = `
 
 const layoutService = await getService(IWorkbenchLayoutService); // Bug happens without this line
 layoutService;
+
+const sidebarView = new SplitViewView(document.getElementById('sidebar')!);
+const editorsView = new SplitViewView(document.getElementById('editors')!, 100);
+
+const splitView = createHorizontalSplitView(document.querySelector('#workbench-top')!, sidebarView, editorsView);
+splitView;
 for (const config of [
   {
     part: Parts.SIDEBAR_PART,
@@ -150,20 +158,17 @@ for (const config of [
 ]) {
   attachPart(config.part, document.querySelector<HTMLDivElement>(config.element)!);
 
-  if (!isPartVisibile(config.part)) {
-    document.querySelector<HTMLDivElement>(config.element)!.style.display = 'none';
+  if (config.part === Parts.SIDEBAR_PART) {
+    if (!isPartVisibile(config.part)) {
+      sidebarView.layout(0);
+    }
+
+    onPartVisibilityChange(config.part, (visible) => {
+      document.querySelector<HTMLElement>(config.element)!.style.width = visible ? '0' : '200px';
+    });
   }
 
   onPartVisibilityChange(config.part, (visible) => {
-    if (config.part === Parts.SIDEBAR_PART) {
-      document.querySelector<HTMLElement>(config.element)!.style.width = visible ? '0' : '200px';
-    }
     document.querySelector<HTMLDivElement>(config.element)!.style.display = visible ? 'block' : 'none';
   });
 }
-
-createHorizontalSplitView(
-  document.getElementById('workbench-top')!,
-  new SplitViewView(document.getElementById('sidebar')!),
-  new SplitViewView(document.getElementById('editors')!, 100)
-);

@@ -11,15 +11,16 @@ export class SplitViewView implements IView {
   readonly element: HTMLElement;
   readonly minimumSize: number;
   readonly maximumSize: number = Number.POSITIVE_INFINITY;
+
   readonly onDidChange = new Emitter<number | undefined>().event;
+  readonly onLayout = new Emitter<(newSize: number) => void>().event;
 
   constructor(element: HTMLElement, minimumSize?: number) {
     this.element = element;
     this.minimumSize = minimumSize ?? 0;
-    this.layout(200, 0);
   }
 
-  layout(size: number, _offset: number): void {
+  layout(size: number): void {
     this.element.style.width = `${size}px`;
   }
 }
