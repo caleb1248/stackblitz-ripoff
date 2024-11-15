@@ -1,14 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="width: 100vw">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
+    <title>Stackblitz rip-off</title>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/eruda" onload="eruda.init()"></script> -->
   </head>
-  <body>
+  <body style="overflow: hidden">
+    <div id="loading-screen">Loading...</div>
     <div id="app">
-      <div id="editor"></div>
+      <div id="sidebar" style="min-height: 0"></div>
+      <div id="main" style="min-height: 0">
+        <div id="editor" style="min-width: 0; min-height: 0"></div>
+        <div id="panel" style="min-height: 0; min-width: 0"></div>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

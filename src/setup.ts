@@ -1,70 +1,58 @@
-import { initialize as initializeMonacoServices, getService, IWorkbenchLayoutService } from 'vscode/services';
-import getViewsServiceOverride, {
-  attachPart,
-  Parts,
-  isPartVisibile,
-  onPartVisibilityChange,
-  isEditorPartVisible,
-  setPartVisibility,
-} from '@codingame/monaco-vscode-views-service-override';
-
-import getFilesServiceOverride, {
-  // InMemoryFileSystemProvider,
-  // registerFileSystemOverlay,
-  registerHTMLFileSystemProvider,
-  createIndexedDBProviders,
-  initFile,
-} from '@codingame/monaco-vscode-files-service-override';
-
-import getConfigurationServiceOverride, {
-  IStoredWorkspace,
-} from '@codingame/monaco-vscode-configuration-service-override';
-
-import getModelServiceOverride from '@codingame/monaco-vscode-model-service-override';
+import { initialize } from 'vscode/services';
 import getTextmateServiceOverride from '@codingame/monaco-vscode-textmate-service-override';
 import getThemeServiceOverride from '@codingame/monaco-vscode-theme-service-override';
+import getModelServiceOverride from '@codingame/monaco-vscode-model-service-override';
+import getExtensionsServiceOverride, { ExtensionHostKind } from '@codingame/monaco-vscode-extensions-service-override';
 import getLanguagesServiceOverride from '@codingame/monaco-vscode-languages-service-override';
-import getExtensionServiceOverride from '@codingame/monaco-vscode-extensions-service-override';
-import getQuickAccessServiceOverride from '@codingame/monaco-vscode-quickaccess-service-override';
-import getExplorerServiceOverride from '@codingame/monaco-vscode-explorer-service-override';
-import getSearchServiceOverride from '@codingame/monaco-vscode-search-service-override';
-import getPreferencesServiceOverride from '@codingame/monaco-vscode-preferences-service-override';
+import getOutputServiceOverride from '@codingame/monaco-vscode-output-service-override';
+import getConfigurationServiceOverride, {
+  initUserConfiguration,
+} from '@codingame/monaco-vscode-configuration-service-override';
 import getDialogServiceOverride from '@codingame/monaco-vscode-dialogs-service-override';
+import getExplorerServiceOverride from '@codingame/monaco-vscode-explorer-service-override';
+import getViewsServiceOverride, { Parts, attachPart } from '@codingame/monaco-vscode-views-service-override';
+import getFilesServiceOverride, {
+  RegisteredFileSystemProvider,
+  registerFileSystemOverlay,
+} from '@codingame/monaco-vscode-files-service-override';
 import getMarkersServiceOverride from '@codingame/monaco-vscode-markers-service-override';
-
-import { createHorizontalSplitView, SplitViewView } from './split-view-stuff';
-import * as monaco from 'monaco-editor';
+import getNotificationsServiceOverride from '@codingame/monaco-vscode-notifications-service-override';
 
 import 'vscode/localExtensionHost';
 
+import { Uri } from 'vscode';
+
 import { Worker } from './tools/crossOriginWorker';
 import { workerConfig } from './tools/extHostWorker';
-import { LayoutPriority } from 'vscode/vscode/vs/base/browser/ui/splitview/splitview';
+import { registerExtension } from 'vscode/extensions';
+
+const provider = new RegisteredFileSystemProvider(false);
+provider.mkdirSync(Uri.parse('playground'));
+
+registerFileSystemOverlay(1, provider);
 
 export type WorkerLoader = () => Worker;
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
-  editorWorkerService: () =>
+  TextEditorWorker: () =>
     new Worker(new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url), {
       type: 'module',
     }),
-  textMateWorker: () =>
+  TextMateWorker: () =>
     new Worker(new URL('@codingame/monaco-vscode-textmate-service-override/worker', import.meta.url), {
       type: 'module',
     }),
-  // outputLinkComputer: () =>
-  //   new Worker(new URL("@codingame/monaco-vscode-output-service-override/worker", import.meta.url), { type: "module" }),
-  // languageDetectionWorkerService: () =>
-  //   new Worker(new URL("@codingame/monaco-vscode-language-detection-worker-service-override/worker", import.meta.url), {
-  //     type: "module",
-  //   }),
-  // notebookEditorWorkerService: () =>
-  //   new Worker(new URL("@codingame/monaco-vscode-notebook-service-override/worker", import.meta.url), {
-  //     type: "module",
-  //   }),
-  localFileSearchWorker: () =>
-    new Worker(new URL('@codingame/monaco-vscode-search-service-override/worker', import.meta.url), { type: 'module' }),
-};
 
+  OutputLinkDetectionWorker: () =>
+    new Worker(new URL('@codingame/monaco-vscode-output-service-override/worker', import.meta.url), { type: 'module' }),
+  // LocalFileSearchWorker: () =>
+  //   new Worker(
+  //     new URL(
+  //       '@codingame/monaco-vscode-search-service-override/worker',
+  //       import.meta.url
+  //     ),
+  //     { type: 'module' }
+  //   ),
+};
 window.MonacoEnvironment = {
   getWorker: function (moduleId, label) {
     const workerFactory = workerLoaders[label];
@@ -75,112 +63,54 @@ window.MonacoEnvironment = {
   },
 };
 
-// const fsProvider = new InMemoryFileSystemProvider();
-await createIndexedDBProviders();
-const workspaceFile = monaco.Uri.from({ scheme: 'tmp', path: '/test.code-workspace' });
-await initFile(
-  workspaceFile,
-  JSON.stringify(
-    <IStoredWorkspace>{
-      folders: [],
-    },
-    null,
-    2
-  )
-);
-registerHTMLFileSystemProvider();
-// registerFileSystemOverlay(1, fsProvider);
+await initUserConfiguration(`{
+  "files.autoSave": false,
+  "workbench.colorTheme": "Default Dark Modern",
+}`);
 
-initializeMonacoServices(
+await initialize(
   {
-    ...getExtensionServiceOverride(workerConfig),
-    ...getModelServiceOverride(),
-    ...getTextmateServiceOverride(),
-    ...getThemeServiceOverride(),
-    ...getLanguagesServiceOverride(),
-    ...getFilesServiceOverride(),
-    ...getConfigurationServiceOverride(),
     ...getViewsServiceOverride(),
-    ...getQuickAccessServiceOverride({
-      isKeybindingConfigurationVisible: isEditorPartVisible,
-      shouldUseGlobalPicker: (_editor, isStandalone) => !isStandalone && isEditorPartVisible(),
-    }),
-    ...getSearchServiceOverride(),
-    ...getExplorerServiceOverride(),
-    ...getPreferencesServiceOverride(),
+    ...getFilesServiceOverride(),
+    ...getThemeServiceOverride(),
+    ...getTextmateServiceOverride(),
+    ...getModelServiceOverride(),
+    ...getExtensionsServiceOverride(workerConfig),
+    ...getLanguagesServiceOverride(),
+    ...getConfigurationServiceOverride(),
     ...getDialogServiceOverride(),
+    ...getExplorerServiceOverride(),
+    ...getOutputServiceOverride(),
     ...getMarkersServiceOverride(),
+    ...getNotificationsServiceOverride(),
   },
   document.body,
   {
     workspaceProvider: {
       trusted: true,
-      async open() {
-        window.open(window.location.href);
-        return true;
+      workspace: {
+        folderUri: Uri.file('/playground'),
       },
-      workspace: { workspaceUri: workspaceFile },
+      async open() {
+        return false;
+      },
     },
-  },
-  {}
+  }
 );
 
-const appDiv = document.getElementById('app') as HTMLDivElement;
+attachPart(Parts.SIDEBAR_PART, document.getElementById('sidebar')!);
+attachPart(Parts.EDITOR_PART, document.getElementById('editor')!);
+attachPart(Parts.PANEL_PART, document.getElementById('panel')!);
 
-appDiv.innerHTML = `
-<div id="workbench-top">
-  <div style="display: flex; flex: none; border: 1px solid var(--vscode-editorWidget-border)">
-    <div id="activityBar"></div>
-    <div id="sidebar" style="width: 400px"></div>
-    <div id="auxiliaryBar-left" style="max-width: 300px"></div>
-  </div>
-  <div style="flex: 1; min-width: 0">
-    <div id="editors"></div>
-  </div>
-</div>`;
-
-const layoutService = await getService(IWorkbenchLayoutService); // Bug happens without this line
-layoutService;
-
-const sidebarView = new SplitViewView(document.getElementById('sidebar')!, {
-  minimumSize: 170,
-  priority: 'low',
-  snap: true,
-});
-const editorsView = new SplitViewView(document.getElementById('editors')!, { minimumSize: 100 });
-
-const splitView = createHorizontalSplitView(document.querySelector('#workbench-top')!, sidebarView, editorsView);
-splitView;
-for (const config of [
+await registerExtension(
   {
-    part: Parts.SIDEBAR_PART,
-    element: '#sidebar',
+    name: 'python-playground',
+    description: 'Python language server my playground',
+    publisher: 'caleb1248',
+    version: '0.0.1',
+    engines: {
+      vscode: '*',
+    },
   },
-  {
-    part: Parts.ACTIVITYBAR_PART,
-    element: '#activityBar',
-  },
-  { part: Parts.EDITOR_PART, element: '#editors' },
-]) {
-  attachPart(config.part, document.querySelector<HTMLDivElement>(config.element)!);
-
-  if (config.part === Parts.SIDEBAR_PART) {
-    if (!isPartVisibile(config.part)) {
-      splitView.resizeView(0, 0);
-    }
-
-    onPartVisibilityChange(config.part, (visible) => {
-      splitView.setViewVisible(0, visible);
-      splitView.resizeView(0, visible ? 170 : 0);
-      sidebarView.layout(visible ? 170 : 0);
-    });
-
-    sidebarView.onVisibilityChange((visible) => {
-      setPartVisibility(config.part as Parts.SIDEBAR_PART, visible);
-    });
-  } else {
-    onPartVisibilityChange(config.part, (visible) => {
-      document.querySelector<HTMLDivElement>(config.element)!.style.display = visible ? 'block' : 'none';
-    });
-  }
-}
+  ExtensionHostKind.LocalProcess
+).setAsDefaultApi();

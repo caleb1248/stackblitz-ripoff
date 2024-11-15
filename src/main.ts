@@ -16,3 +16,5 @@ import '@codingame/monaco-vscode-html-language-features-default-extension';
 
 import '@codingame/monaco-vscode-css-default-extension';
 import '@codingame/monaco-vscode-css-language-features-default-extension';
+
+document.getElementById('loading-screen')?.remove();
