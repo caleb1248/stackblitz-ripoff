@@ -31,7 +31,7 @@
     "@codingame/monaco-vscode-model-service-override": "^11.0.1",
     "@codingame/monaco-vscode-notifications-service-override": "^11.0.1",
     "@codingame/monaco-vscode-output-service-override": "^11.0.1",
-    "@codingame/monaco-vscode-preferences-service-override": "^11.0.1",
+    "@codingame/monaco-vscode-preferences-service-override": "^11.0.2",
     "@codingame/monaco-vscode-search-service-override": "^11.0.1",
     "@codingame/monaco-vscode-terminal-service-override": "^11.0.1",
     "@codingame/monaco-vscode-textmate-service-override": "^11.0.1",

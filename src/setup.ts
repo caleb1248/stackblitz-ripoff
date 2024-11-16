@@ -8,6 +8,7 @@ import getOutputServiceOverride from '@codingame/monaco-vscode-output-service-ov
 import getConfigurationServiceOverride, {
   initUserConfiguration,
 } from '@codingame/monaco-vscode-configuration-service-override';
+import getPreferencesServiceOverride from '@codingame/monaco-vscode-preferences-service-override';
 import getDialogServiceOverride from '@codingame/monaco-vscode-dialogs-service-override';
 import getExplorerServiceOverride from '@codingame/monaco-vscode-explorer-service-override';
 import getViewsServiceOverride, { Parts, attachPart } from '@codingame/monaco-vscode-views-service-override';
@@ -86,6 +87,7 @@ await initialize(
     ...getMarkersServiceOverride(),
     ...getNotificationsServiceOverride(),
     ...getTerminalServiceOverride(new WebContainerTerminalBackend()),
+    ...getPreferencesServiceOverride(),
   },
   document.body,
   {
