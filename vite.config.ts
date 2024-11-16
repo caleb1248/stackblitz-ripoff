@@ -2,6 +2,13 @@ import { defineConfig } from "vite";
 import importMetaUrlPlugin from "@codingame/esbuild-import-meta-url-plugin";
 import pkg from "./package.json" with { type: "json" };
 
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from "url";
+
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 const localDependencies = Object.entries(pkg.dependencies)
   .filter(([, version]) => version.startsWith("file:../"))
   .map(([name]) => name);
@@ -42,4 +49,38 @@ export default defineConfig({
   resolve: {
     dedupe: ["vscode", ...localDependencies],
   },
+
+  plugins: [{
+    name: 'force-prevent-transform-assets',
+    apply: 'serve',
+    configureServer(server) {
+      return () => {
+        server.middlewares.use(async (req, res, next) => {
+          if (req.originalUrl != null) {
+            const pathname = new URL(req.originalUrl, import.meta.url).pathname
+            if (pathname.endsWith('.html')) {
+              res.setHeader('Content-Type', 'text/html')
+              res.writeHead(200)
+              res.write(fs.readFileSync(path.join(__dirname, pathname)))
+              res.end()
+            }
+          }
+
+          next()
+        })
+      }
+    }
+  },{
+    // For the *-language-features extensions which use SharedArrayBuffer
+    name: 'configure-response-headers',
+    apply: 'serve',
+    configureServer: (server) => {
+      server.middlewares.use((_req, res, next) => {
+        res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
+        res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+        next()
+      })
+    }
+  },]
 });

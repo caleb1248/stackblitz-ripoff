@@ -17,6 +17,7 @@ import getFilesServiceOverride, {
 } from '@codingame/monaco-vscode-files-service-override';
 import getMarkersServiceOverride from '@codingame/monaco-vscode-markers-service-override';
 import getNotificationsServiceOverride from '@codingame/monaco-vscode-notifications-service-override';
+import getTerminalServiceOverride from '@codingame/monaco-vscode-terminal-service-override';
 
 import 'vscode/localExtensionHost';
 
@@ -25,6 +26,7 @@ import { Uri } from 'vscode';
 import { Worker } from './tools/crossOriginWorker';
 import { workerConfig } from './tools/extHostWorker';
 import { registerExtension } from 'vscode/extensions';
+import { WebContainerTerminalBackend } from './webcontainer/terminal';
 
 const provider = new RegisteredFileSystemProvider(false);
 provider.mkdirSync(Uri.parse('playground'));
@@ -83,6 +85,7 @@ await initialize(
     ...getOutputServiceOverride(),
     ...getMarkersServiceOverride(),
     ...getNotificationsServiceOverride(),
+    ...getTerminalServiceOverride(new WebContainerTerminalBackend()),
   },
   document.body,
   {
