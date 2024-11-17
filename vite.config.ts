@@ -4,10 +4,8 @@ import pkg from "./package.json" with { type: "json" };
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { fileURLToPath } from "url";
 
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const isWindows = process.platform === 'win32'
 
 const localDependencies = Object.entries(pkg.dependencies)
   .filter(([, version]) => version.startsWith("file:../"))
@@ -57,11 +55,11 @@ export default defineConfig({
       return () => {
         server.middlewares.use(async (req, res, next) => {
           if (req.originalUrl != null) {
-            const pathname = new URL(req.originalUrl, import.meta.url).pathname
+            const pathname = new URL(req.originalUrl.replace(/^\//, ""), import.meta.url).pathname
             if (pathname.endsWith('.html')) {
               res.setHeader('Content-Type', 'text/html')
               res.writeHead(200)
-              res.write(fs.readFileSync(path.join(__dirname, pathname)))
+              res.write(fs.readFileSync(path.join(isWindows ? pathname.replace(/^\//, "") : pathname)))
               res.end()
             }
           }
