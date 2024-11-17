@@ -9,6 +9,8 @@ import {
 import { Emitter, Event } from 'vscode/vscode/vs/base/common/event';
 import { SpawnOptions, WebContainerProcess } from '@webcontainer/api';
 
+let pidCount = 0;
+
 function unsupported(name: string) {
   return function () {
     throw new Error(`Unsupported method '${name}'`);
@@ -73,10 +75,10 @@ class WebContainerTerminalProcess implements ITerminalChildProcess {
   public onDidChangeProperty = Event.None;
 
   shouldPersist = false;
-  id = 0;
 
   private _inputQueue = new InputQueue();
 
+  id = 0;
   constructor(private _options: WebContainerTerminalProcessOptions) {}
 
   public async start() {
@@ -106,7 +108,7 @@ class WebContainerTerminalProcess implements ITerminalChildProcess {
     this._input = this._process.input.getWriter();
 
     this._readyEmitter.fire({
-      pid: 0,
+      pid: ++pidCount,
       cwd: this._options.cwd,
       windowsPty: undefined,
     });
@@ -129,7 +131,6 @@ class WebContainerTerminalProcess implements ITerminalChildProcess {
   }
 
   input(data: string): void {
-    alert('inputting data');
     if (this._input) {
       this._inputQueue.push(this._input.write(data));
     }
