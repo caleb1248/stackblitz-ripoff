@@ -28,6 +28,7 @@ import { Worker } from './tools/crossOriginWorker';
 import { workerConfig } from './tools/extHostWorker';
 import { registerExtension } from 'vscode/extensions';
 import { WebContainerTerminalBackend } from './webcontainer/terminal';
+import './webcontainer/fileSystem';
 
 const provider = new RegisteredFileSystemProvider(false);
 provider.mkdirSync(Uri.parse('playground'));
