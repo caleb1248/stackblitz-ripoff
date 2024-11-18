@@ -4,6 +4,9 @@ import { IFileSystemProviderWithFileReadWriteCapability, IStat } from 'vscode/vs
 import { URI } from 'vscode/vscode/vs/base/common/uri';
 import { Emitter } from 'vscode/vscode/vs/base/common/event';
 
+// Look at https://github.com/microsoft/vscode/blob/main/src/vs/platform/files/node/diskFileSystemProvider.ts
+// Also look at https://github.com/microsoft/vscode/blob/main/src/vs/base/node/pfs.ts
+
 // Webcontainer doesn't have a built-in stat function, so we need to create a process and communicate with it to get the stat information.
 // We will use stdio to communicate with the process.
 
@@ -71,12 +74,12 @@ class StatRpc {
   private _idCounter = 0;
 
   public async stat(uri: URI): Promise<IStat> {
-    const id = Math.random().toString();
+    const id = ++this._idCounter;
     const path = uri.path;
     const data = JSON.stringify({ path, id });
     this._input.write(data);
 
-    const result = await new Promise<string>((resolve) => {
+    const result = await new Promise<{ type: string; error?: any }>((resolve) => {
       const disposable = this._onData((data: string) => {
         const { id: resultId, type, error } = JSON.parse(data);
         if (resultId === id) {
@@ -119,3 +122,5 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
 }
 
 createNodeStatProgram();
+
+export default WebContainerFileSystemProvider;
