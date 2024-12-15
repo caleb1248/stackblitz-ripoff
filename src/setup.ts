@@ -12,10 +12,7 @@ import getPreferencesServiceOverride from '@codingame/monaco-vscode-preferences-
 import getDialogServiceOverride from '@codingame/monaco-vscode-dialogs-service-override';
 import getExplorerServiceOverride from '@codingame/monaco-vscode-explorer-service-override';
 import getViewsServiceOverride, { Parts, attachPart } from '@codingame/monaco-vscode-views-service-override';
-import getFilesServiceOverride, {
-  RegisteredFileSystemProvider,
-  registerFileSystemOverlay,
-} from '@codingame/monaco-vscode-files-service-override';
+import getFilesServiceOverride, { registerFileSystemOverlay } from '@codingame/monaco-vscode-files-service-override';
 import getMarkersServiceOverride from '@codingame/monaco-vscode-markers-service-override';
 import getNotificationsServiceOverride from '@codingame/monaco-vscode-notifications-service-override';
 import getTerminalServiceOverride from '@codingame/monaco-vscode-terminal-service-override';
@@ -28,10 +25,12 @@ import { Worker } from './tools/crossOriginWorker';
 import { workerConfig } from './tools/extHostWorker';
 import { registerExtension } from 'vscode/extensions';
 import { WebContainerTerminalBackend } from './webcontainer/terminal';
-import './webcontainer/fileSystem';
+import WebContainerFileSystemProvider from './webcontainer/fileSystem';
 
-const provider = new RegisteredFileSystemProvider(false);
-provider.mkdirSync(Uri.parse('playground'));
+const provider = await WebContainerFileSystemProvider.create();
+provider.onDidChangeFile((e) => {
+  console.log(e);
+});
 
 registerFileSystemOverlay(1, provider);
 
@@ -70,6 +69,7 @@ window.MonacoEnvironment = {
 await initUserConfiguration(`{
   "files.autoSave": false,
   "workbench.colorTheme": "Default Dark Modern",
+  "editor.tabSize": 2
 }`);
 
 await initialize(
@@ -95,7 +95,7 @@ await initialize(
     workspaceProvider: {
       trusted: true,
       workspace: {
-        folderUri: Uri.file('/playground'),
+        folderUri: Uri.file('/'),
       },
       async open() {
         return false;

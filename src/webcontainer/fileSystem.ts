@@ -1,6 +1,7 @@
 import type { WebContainerProcess } from '@webcontainer/api';
 import webContainer from './init';
 import {
+  FileChangeType,
   FilePermission,
   FileSystemProviderCapabilities,
   FileSystemProviderError,
@@ -12,13 +13,12 @@ import {
   IFileSystemProviderWithFileReadWriteCapability,
   IFileWriteOptions,
   IStat,
-  IWatchOptions,
 } from 'vscode/vscode/vs/platform/files/common/files';
 import { URI } from 'vscode/vscode/vs/base/common/uri';
 import { Emitter, Event } from 'vscode/vscode/vs/base/common/event';
 import statrpcBackend from './statrpc-backend?raw';
-import { Disposable, IDisposable } from 'vscode/vscode/vs/base/common/lifecycle';
-import { fstat } from 'fs';
+import { Disposable } from 'vscode/vscode/vs/base/common/lifecycle';
+import { BaseTransports, Connection, createConnection, Message } from 'portablerpc';
 
 // Look at https://github.com/microsoft/vscode/blob/main/src/vs/platform/files/node/diskFileSystemProvider.ts
 // Also look at https://github.com/microsoft/vscode/blob/main/src/vs/base/node/pfs.ts
@@ -41,11 +41,7 @@ fs.writeFileSync('/home/editor-internal/statrpc.js', ${JSON.stringify(statrpcBac
   await webContainer.fs.rm('/statprogramcreate.js', { force: true });
 }
 
-interface RpcMessage {
-  id: number;
-}
-
-interface StatResult extends RpcMessage {
+interface StatResult {
   ctime: number;
   mtime: number;
   size: number;
@@ -54,11 +50,22 @@ interface StatResult extends RpcMessage {
   isSymlink: boolean;
 }
 
-interface StatError extends RpcMessage {
+interface StatError {
   error: string;
 }
 
-interface ExistsResult extends RpcMessage {
+interface Dirent {
+  name: string;
+  type: 'directory' | 'file' | 'unknown';
+  isSymlink: boolean;
+}
+
+interface ReaddirResult {
+  result: Array<Dirent>;
+}
+interface ReaddirError extends StatError {}
+
+interface ExistsResult {
   exists: boolean;
 }
 
@@ -70,25 +77,38 @@ class StatRpcError extends Error {
   }
 }
 
+class WebContainerTransports extends BaseTransports {
+  private _writer: WritableStreamDefaultWriter<string>;
+
+  constructor(writer: WritableStreamDefaultWriter<string>) {
+    super();
+    this._writer = writer;
+  }
+  sendMessage<T extends Message>(message: T): void {
+    this._writer.write(JSON.stringify(message) + '\n');
+  }
+
+  public fireMessage = super.fireMessage;
+}
+
 class StatRpc {
   // @ts-expect-error - This will definitely be initialized in the create method.
   private _process: WebContainerProcess;
   // @ts-expect-error - This will definitely be initialized in the create method.
   private _input: WritableStreamDefaultWriter = [];
   // @ts-expect-error - This will definitely be initialized in the create method.
-  private _output: ReadableStream = [];
-
-  private _dataEmitter = new Emitter<any>();
-  private _onData: <T extends RpcMessage>(listener: (e: T) => void) => IDisposable = this._dataEmitter.event;
+  private _output: ReadableStream;
+  // @ts-expect-error - This will definitely be initialized in the create method.
+  private _transports: WebContainerTransports;
+  // @ts-expect-error - This will definitely be initialized in the create method.
+  public connection: Connection;
 
   private constructor() {}
 
   private async _startProcess() {
     await createNodeStatProgram();
 
-    this._process = await webContainer.spawn('node', ['/home/editor-internal/statrpc.js'], {
-      terminal: { rows: 100, cols: 100 },
-    });
+    this._process = await webContainer.spawn('node', ['/home/editor-internal/statrpc.js']);
     this._input = this._process.input.getWriter();
     this._output = this._process.output;
     await new Promise<void>((resolve) => {
@@ -96,11 +116,22 @@ class StatRpc {
         new WritableStream<string>({
           write: (data) => {
             if (data.startsWith('ready')) {
+              console.log('YAY!');
+              this._transports = new WebContainerTransports(this._input);
+              this.connection = createConnection(this._transports);
               resolve();
               return;
             }
 
-            this._dataEmitter.fire(JSON.parse(data));
+            // console.log(data);
+
+            if (this._transports) {
+              const parsed = JSON.parse(data);
+              if ('params' in parsed) return;
+              this._transports.fireMessage(parsed);
+            } else {
+              console.log('what?');
+            }
           },
         })
       );
@@ -109,30 +140,11 @@ class StatRpc {
     console.log('process ready!');
   }
 
-  private _idCounter = 0;
-
   public async stat(uri: URI): Promise<IStat> {
-    const id = ++this._idCounter;
     const path = uri.path;
-    const data = JSON.stringify({ path, id, type: 'stat' });
-    this._input.write(data + '\r\n'); // A newline is required to trigger the stdin in webcontainers
 
-    const result = await new Promise<StatError | StatResult>((resolve) => {
-      const disposable = this._onData<StatResult | StatError>((statData) => {
-        if (statData.id !== id || JSON.stringify(statData) === data) {
-          console.log('no');
-          return;
-        }
-
-        console.log('help', statData);
-        disposable.dispose();
-        resolve(statData);
-      });
-    });
-
-    if ('error' in result) {
-      throw new StatRpcError(result.error);
-    }
+    const result = await this.connection.sendRequest<StatResult | StatError>('stat', { path });
+    if ('error' in result) throw new StatRpcError(result.error);
 
     let type: FileType;
     switch (result.type) {
@@ -158,29 +170,16 @@ class StatRpc {
   }
 
   public async exists(path: URI) {
-    const id = ++this._idCounter;
-
-    const data = JSON.stringify({
-      id,
-      type: 'exists',
-      path: path.path,
-    });
-
-    const result = new Promise<boolean>((resolve) => {
-      const disposable = this._onData<ExistsResult>((existData) => {
-        if (existData.id !== id || 'path' in existData) {
-          console.log('no');
-          return;
-        }
-
-        console.log('yes', existData);
-        disposable.dispose();
-        resolve(existData.exists);
-      });
-    });
-
-    await this._input.write(data + '\n');
+    const result = this.connection.sendRequest<ExistsResult>('exists', { path: path.path });
     return await result;
+  }
+
+  public async readdir(path: URI) {
+    const result = await this.connection.sendRequest<ReaddirResult | ReaddirError>('readdir', { path: path.path });
+    if ('error' in result) {
+      throw new StatRpcError(result.error);
+    }
+    return result.result;
   }
 
   static async create() {
@@ -206,11 +205,31 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
   public static async create() {
     const fileSystem = new WebContainerFileSystemProvider();
     fileSystem._statRpc = await StatRpc.create();
+
+    // Uncomment this when webcontainer upgrades to node 20
+    // fileSystem._statRpc.connection.onNotification('fileChanged', ({ type, path }) => {
+    //   const convertedType =
+    //     type === 'create' ? FileChangeType.ADDED : type === 'delete' ? FileChangeType.DELETED : FileChangeType.UPDATED;
+    //   fileSystem._fileChangedEmitter.fire([{ type: convertedType, resource: URI.file(path) }]);
+    // });
+
+    webContainer.fs.watch('/', { recursive: true, encoding: 'utf-8' }, async (type, filename) => {
+      if (type == 'change') {
+        fileSystem._fileChangedEmitter.fire([{ type: FileChangeType.UPDATED, resource: URI.file(filename as string) }]);
+        return;
+      }
+      const exists = await fileSystem.exists(URI.file(filename as string));
+      fileSystem._fileChangedEmitter.fire([
+        { type: exists ? FileChangeType.ADDED : FileChangeType.DELETED, resource: URI.file(filename as string) },
+      ]);
+    });
+
     return fileSystem;
   }
 
-  public watch() {
+  public watch(uri: URI) {
     // Unsupported - watches all files.
+    console.log('watching path', uri.toString());
     return Disposable.None;
   }
 
@@ -268,6 +287,26 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
   async delete(resource: URI, opts: IFileDeleteOptions): Promise<void> {
     await webContainer.fs.rm(resource.path, {
       recursive: opts.recursive,
+    });
+  }
+
+  async readdir(resource: URI): Promise<[string, FileType][]> {
+    const result = await this._statRpc.readdir(resource);
+    return result.map((dirent) => {
+      let type: FileType;
+      switch (dirent.type) {
+        case 'file':
+          type = FileType.File;
+          break;
+        case 'directory':
+          type = FileType.Directory;
+          break;
+        default:
+          type = FileType.Unknown;
+      }
+
+      if (dirent.isSymlink) type |= FileType.SymbolicLink;
+      return [dirent.name, type];
     });
   }
 }

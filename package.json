@@ -43,6 +43,7 @@
     "@codingame/monaco-vscode-views-service-override": "^11.0.1",
     "@webcontainer/api": "^1.5.1",
     "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@^11.0.1",
+    "portablerpc": "^1.0.3",
     "typescript": "^5.5.4",
     "vscode": "npm:@codingame/monaco-vscode-api@^11.0.1"
   }
