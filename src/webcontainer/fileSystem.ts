@@ -31,8 +31,8 @@ async function createNodeStatProgram() {
   await webContainer.fs.writeFile(
     '/statprogramcreate.js',
     `const fs = require('fs');
-fs.mkdirSync('/home/editor-internal');
-fs.writeFileSync('/home/editor-internal/statrpc.js', ${JSON.stringify(statrpcBackend)});`
+fs.mkdirSync('/home/.editor-internal');
+fs.writeFileSync('/home/.editor-internal/statrpc.js', ${JSON.stringify(statrpcBackend)});`
   );
 
   const statProgramCreator = await webContainer.spawn('node', ['statprogramcreate.js']);
@@ -108,7 +108,7 @@ class StatRpc {
   private async _startProcess() {
     await createNodeStatProgram();
 
-    this._process = await webContainer.spawn('node', ['/home/editor-internal/statrpc.js']);
+    this._process = await webContainer.spawn('node', ['/home/.editor-internal/statrpc.js']);
     this._input = this._process.input.getWriter();
     this._output = this._process.output;
     await new Promise<void>((resolve) => {
