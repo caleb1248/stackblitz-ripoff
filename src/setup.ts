@@ -2,7 +2,7 @@ import { initialize } from 'vscode/services';
 import getTextmateServiceOverride from '@codingame/monaco-vscode-textmate-service-override';
 import getThemeServiceOverride from '@codingame/monaco-vscode-theme-service-override';
 import getModelServiceOverride from '@codingame/monaco-vscode-model-service-override';
-import getExtensionsServiceOverride, { ExtensionHostKind } from '@codingame/monaco-vscode-extensions-service-override';
+import getExtensionsServiceOverride from '@codingame/monaco-vscode-extensions-service-override';
 import getLanguagesServiceOverride from '@codingame/monaco-vscode-languages-service-override';
 import getOutputServiceOverride from '@codingame/monaco-vscode-output-service-override';
 import getConfigurationServiceOverride, {
@@ -12,7 +12,10 @@ import getPreferencesServiceOverride from '@codingame/monaco-vscode-preferences-
 import getDialogServiceOverride from '@codingame/monaco-vscode-dialogs-service-override';
 import getExplorerServiceOverride from '@codingame/monaco-vscode-explorer-service-override';
 import getViewsServiceOverride, { Parts, attachPart } from '@codingame/monaco-vscode-views-service-override';
-import getFilesServiceOverride, { registerFileSystemOverlay } from '@codingame/monaco-vscode-files-service-override';
+import getFilesServiceOverride, {
+  createIndexedDBProviders,
+  registerFileSystemOverlay,
+} from '@codingame/monaco-vscode-files-service-override';
 import getMarkersServiceOverride from '@codingame/monaco-vscode-markers-service-override';
 import getNotificationsServiceOverride from '@codingame/monaco-vscode-notifications-service-override';
 import getTerminalServiceOverride from '@codingame/monaco-vscode-terminal-service-override';
@@ -23,14 +26,10 @@ import { Uri } from 'vscode';
 
 import { Worker } from './tools/crossOriginWorker';
 import { workerConfig } from './tools/extHostWorker';
-import { registerExtension } from 'vscode/extensions';
 import { WebContainerTerminalBackend } from './webcontainer/terminal';
 import WebContainerFileSystemProvider from './webcontainer/fileSystem';
 
 const provider = await WebContainerFileSystemProvider.create();
-provider.onDidChangeFile((e) => {
-  console.log(e);
-});
 
 registerFileSystemOverlay(1, provider);
 
@@ -66,10 +65,13 @@ window.MonacoEnvironment = {
   },
 };
 
+await createIndexedDBProviders();
+
 await initUserConfiguration(`{
   "files.autoSave": false,
   "workbench.colorTheme": "Default Dark Modern",
-  "editor.tabSize": 2
+  "workbench.iconTheme": "material-icon-theme",
+  "editor.tabSize": 2,
 }`);
 
 await initialize(
@@ -107,16 +109,3 @@ await initialize(
 attachPart(Parts.SIDEBAR_PART, document.getElementById('sidebar')!);
 attachPart(Parts.EDITOR_PART, document.getElementById('editor')!);
 attachPart(Parts.PANEL_PART, document.getElementById('panel')!);
-
-await registerExtension(
-  {
-    name: 'python-playground',
-    description: 'Python language server my playground',
-    publisher: 'caleb1248',
-    version: '0.0.1',
-    engines: {
-      vscode: '*',
-    },
-  },
-  ExtensionHostKind.LocalProcess
-).setAsDefaultApi();
