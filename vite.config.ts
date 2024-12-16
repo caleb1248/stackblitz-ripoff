@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import importMetaUrlPlugin from "@codingame/esbuild-import-meta-url-plugin";
+import rollupVsixPlugin from '@codingame/monaco-vscode-rollup-vsix-plugin';
 import pkg from "./package.json" with { type: "json" };
 
 import * as fs from 'fs';
@@ -80,5 +81,5 @@ export default defineConfig({
         next()
       })
     }
-  },]
+  },rollupVsixPlugin()]
 });

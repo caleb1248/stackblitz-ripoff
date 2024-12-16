@@ -4,7 +4,7 @@ import './style.css';
 import './setup';
 
 import '@codingame/monaco-vscode-theme-defaults-default-extension';
-import '@codingame/monaco-vscode-theme-seti-default-extension';
+import './material-icon-theme.vsix';
 
 import '@codingame/monaco-vscode-javascript-default-extension';
 import '@codingame/monaco-vscode-typescript-basics-default-extension';
