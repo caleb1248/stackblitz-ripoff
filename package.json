@@ -34,6 +34,7 @@
     "@codingame/monaco-vscode-output-service-override": "^11.0.1",
     "@codingame/monaco-vscode-preferences-service-override": "^11.0.2",
     "@codingame/monaco-vscode-search-service-override": "^11.0.1",
+    "@codingame/monaco-vscode-shellscript-default-extension": "^11.1.2",
     "@codingame/monaco-vscode-terminal-service-override": "^11.0.1",
     "@codingame/monaco-vscode-textmate-service-override": "^11.0.1",
     "@codingame/monaco-vscode-theme-defaults-default-extension": "^11.0.1",
@@ -46,6 +47,7 @@
     "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@^11.0.1",
     "portablerpc": "^1.0.3",
     "typescript": "^5.5.4",
-    "vscode": "npm:@codingame/monaco-vscode-api@^11.0.1"
+    "vscode": "npm:@codingame/monaco-vscode-api@^11.0.1",
+    "vscode-languageclient": "^9.0.1"
   }
 }

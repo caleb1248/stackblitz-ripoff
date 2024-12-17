@@ -86,7 +86,8 @@ class WebContainerTerminalProcess implements ITerminalChildProcess {
 
     let spawnOptions: SpawnOptions = {};
 
-    spawnOptions.cwd = '/home/projects' + this._options.cwd.startsWith('/') ? '' : '/' + this._options.cwd;
+    spawnOptions.cwd = '/';
+    console.log(this._options.cwd);
 
     if (this._options.shellLaunchConfig.env) {
       for (const [key, value] of Object.entries(this._options.shellLaunchConfig.env)) {

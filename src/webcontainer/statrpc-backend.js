@@ -203,7 +203,6 @@ var portableRpc = (() => {
  */
 async function handleStatRequest(data) {
   let { path: filePath } = data;
-  filePath = path.join('/home/projects', filePath);
 
   /**
    * @type {fs.Stats | undefined}
@@ -289,7 +288,7 @@ connection.onRequest('stat', async (params) => {
 
 connection.onRequest('exists', async (params) => {
   try {
-    await fs.promises.access(path.join('/home/projects', params.path));
+    await fs.promises.access(params.path);
     return { exists: true };
   } catch {
     return { exists: false };
@@ -298,7 +297,7 @@ connection.onRequest('exists', async (params) => {
 
 connection.onRequest('readdir', async (params) => {
   try {
-    const result = await fs.promises.readdir(path.join('/home/projects', params.path), {
+    const result = await fs.promises.readdir(params.path, {
       withFileTypes: true,
     });
 

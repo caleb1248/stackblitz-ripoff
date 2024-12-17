@@ -97,7 +97,7 @@ await initialize(
     workspaceProvider: {
       trusted: true,
       workspace: {
-        folderUri: Uri.file('/'),
+        folderUri: Uri.file('/home/projects'),
       },
       async open() {
         return false;

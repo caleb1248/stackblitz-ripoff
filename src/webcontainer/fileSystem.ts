@@ -20,6 +20,8 @@ import statrpcBackend from './statrpc-backend?raw';
 import { Disposable } from 'vscode/vscode/vs/base/common/lifecycle';
 import { BaseTransports, Connection, createConnection, Message } from 'portablerpc';
 
+import { applyInternals as applyTypescriptServer } from '../extensions/typescript-language-features';
+
 // Look at https://github.com/microsoft/vscode/blob/main/src/vs/platform/files/node/diskFileSystemProvider.ts
 // Also look at https://github.com/microsoft/vscode/blob/main/src/vs/base/node/pfs.ts
 
@@ -107,6 +109,7 @@ class StatRpc {
 
   private async _startProcess() {
     await createNodeStatProgram();
+    await applyTypescriptServer();
 
     this._process = await webContainer.spawn('node', ['/home/.editor-internal/statrpc.js']);
     this._input = this._process.input.getWriter();
@@ -229,13 +232,14 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
 
   public watch(uri: URI) {
     // Unsupported - watches all files.
-    console.log('watching path', uri.toString());
+    // console.log('watching path', uri.toString());
     return Disposable.None;
   }
 
   public async stat(resource: URI): Promise<IStat> {
     try {
-      return this._statRpc.stat(resource);
+      const result = await this._statRpc.stat(resource);
+      return result;
     } catch (e) {
       let code =
         e instanceof StatRpcError && e.code === 'ENOENT'
@@ -251,7 +255,7 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
       throw FileSystemProviderError.create('File is a directory', FileSystemProviderErrorCode.FileIsADirectory);
     }
 
-    return await webContainer.fs.readFile(resource.path);
+    return await webContainer.fs.readFile(resource.path.replace(/^\/home\/projects/, ''));
   }
 
   exists(resource: URI) {
@@ -277,15 +281,16 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
       throw FileSystemProviderError.create('File not found', FileSystemProviderErrorCode.FileNotFound);
     }
 
-    await webContainer.fs.writeFile(resource.path, content);
+    console.log(resource.path.replace(/^\/home\/projects/, ''));
+    await webContainer.fs.writeFile(resource.path.replace(/^\/home\/projects/, ''), content);
   }
 
   async mkdir(resource: URI): Promise<void> {
-    await webContainer.fs.mkdir(resource.path);
+    await webContainer.fs.mkdir(resource.path.replace(/^\/home\/projects/, ''));
   }
 
   async delete(resource: URI, opts: IFileDeleteOptions): Promise<void> {
-    await webContainer.fs.rm(resource.path, {
+    await webContainer.fs.rm(resource.path.replace(/^\/home\/projects/, ''), {
       recursive: opts.recursive,
     });
   }
