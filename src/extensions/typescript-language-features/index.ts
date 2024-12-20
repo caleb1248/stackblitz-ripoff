@@ -5,7 +5,7 @@ import {
   ReadableStreamMessageReader,
   WriteableStreamMessageWriter,
 } from 'vscode-languageclient';
-import { wrapReadableStream, wrapWritableStream } from '../lsp-stream-wrappers';
+import { createStreamTransports, wrapReadableStream, wrapWritableStream } from '../lsp-stream-wrappers';
 
 export async function applyInternals() {
   const shellScript = `
@@ -32,10 +32,7 @@ export function activateServer() {
         '../.editor-internal/node_modules/.bin/typescript-language-server',
         '--stdio',
       ]);
-      return {
-        writer: new WriteableStreamMessageWriter(wrapWritableStream(process.input)),
-        reader: new ReadableStreamMessageReader(wrapReadableStream(process.output)),
-      };
+      return createStreamTransports(process.output, process.input);
     }
   }
 
