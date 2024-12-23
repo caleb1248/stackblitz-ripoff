@@ -266,7 +266,10 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
     if (opts.overwrite && (await this.exists(to))) {
       throw FileSystemProviderError.create('Destination already exists', FileSystemProviderErrorCode.FileExists);
     } else {
-      await webContainer.fs.rename(from.path, to.path);
+      await webContainer.fs.rename(
+        from.path.replace(/^\/home\/projects/, ''),
+        to.path.replace(/^\/home\/projects/, '')
+      );
     }
   }
 
