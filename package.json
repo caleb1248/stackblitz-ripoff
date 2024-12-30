@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "node postinstall.js"
   },
   "devDependencies": {
     "@codingame/monaco-vscode-rollup-vsix-plugin": "^11.1.2",
@@ -47,7 +48,6 @@
     "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@^11.0.1",
     "portablerpc": "^1.0.3",
     "typescript": "^5.5.4",
-    "vscode": "npm:@codingame/monaco-vscode-api@^11.0.1",
-    "vscode-languageclient": "^9.0.1"
+    "vscode": "npm:@codingame/monaco-vscode-api@^11.0.1"
   }
 }

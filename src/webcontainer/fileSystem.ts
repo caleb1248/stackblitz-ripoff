@@ -20,8 +20,6 @@ import statrpcBackend from './statrpc-backend?raw';
 import { Disposable } from 'vscode/vscode/vs/base/common/lifecycle';
 import { BaseTransports, Connection, createConnection, Message } from 'portablerpc';
 
-import { applyInternals as applyTypescriptServer } from '../extensions/typescript-language-features';
-
 // Look at https://github.com/microsoft/vscode/blob/main/src/vs/platform/files/node/diskFileSystemProvider.ts
 // Also look at https://github.com/microsoft/vscode/blob/main/src/vs/base/node/pfs.ts
 
@@ -109,7 +107,6 @@ class StatRpc {
 
   private async _startProcess() {
     await createNodeStatProgram();
-    await applyTypescriptServer();
 
     this._process = await webContainer.spawn('node', ['/home/.editor-internal/statrpc.js']);
     this._input = this._process.input.getWriter();
@@ -255,7 +252,11 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
       throw FileSystemProviderError.create('File is a directory', FileSystemProviderErrorCode.FileIsADirectory);
     }
 
-    return await webContainer.fs.readFile(resource.path.replace(/^\/home\/projects/, ''));
+    try {
+      return await webContainer.fs.readFile(resource.path.replace(/^\/home\/projects/, ''));
+    } catch (e) {
+      throw FileSystemProviderError.create('File not found', FileSystemProviderErrorCode.FileNotFound);
+    }
   }
 
   exists(resource: URI) {
