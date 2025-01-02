@@ -2,7 +2,7 @@ import { initialize } from 'vscode/services';
 import getTextmateServiceOverride from '@codingame/monaco-vscode-textmate-service-override';
 import getThemeServiceOverride from '@codingame/monaco-vscode-theme-service-override';
 import getModelServiceOverride from '@codingame/monaco-vscode-model-service-override';
-import getExtensionsServiceOverride from '@codingame/monaco-vscode-extensions-service-override';
+import getExtensionsServiceOverride, { ExtensionHostKind } from '@codingame/monaco-vscode-extensions-service-override';
 import getLanguagesServiceOverride from '@codingame/monaco-vscode-languages-service-override';
 import getOutputServiceOverride from '@codingame/monaco-vscode-output-service-override';
 import getConfigurationServiceOverride, {
@@ -19,7 +19,9 @@ import getFilesServiceOverride, {
 import getMarkersServiceOverride from '@codingame/monaco-vscode-markers-service-override';
 import getNotificationsServiceOverride from '@codingame/monaco-vscode-notifications-service-override';
 import getTerminalServiceOverride from '@codingame/monaco-vscode-terminal-service-override';
-
+// import getWorkbenchServiceOverride from '@codingame/monaco-vscode-workbench-service-override';
+import getQuickAccessServiceOverride from '@codingame/monaco-vscode-quickaccess-service-override';
+import getSearchServiceOverride from '@codingame/monaco-vscode-search-service-override';
 import 'vscode/localExtensionHost';
 
 import { Uri } from 'vscode';
@@ -28,6 +30,7 @@ import { Worker } from './tools/crossOriginWorker';
 import { workerConfig } from './tools/extHostWorker';
 import { WebContainerTerminalBackend } from './webcontainer/terminal';
 import WebContainerFileSystemProvider from './webcontainer/fileSystem';
+import { registerExtension } from 'vscode/extensions';
 
 const provider = await WebContainerFileSystemProvider.create();
 
@@ -46,14 +49,8 @@ const workerLoaders: Partial<Record<string, WorkerLoader>> = {
 
   OutputLinkDetectionWorker: () =>
     new Worker(new URL('@codingame/monaco-vscode-output-service-override/worker', import.meta.url), { type: 'module' }),
-  // LocalFileSearchWorker: () =>
-  //   new Worker(
-  //     new URL(
-  //       '@codingame/monaco-vscode-search-service-override/worker',
-  //       import.meta.url
-  //     ),
-  //     { type: 'module' }
-  //   ),
+  LocalFileSearchWorker: () =>
+    new Worker(new URL('@codingame/monaco-vscode-search-service-override/worker', import.meta.url), { type: 'module' }),
 };
 window.MonacoEnvironment = {
   getWorker: function (moduleId, label) {
@@ -77,14 +74,17 @@ await initUserConfiguration(`{
 await initialize(
   {
     ...getViewsServiceOverride(),
+    // ...getWorkbenchServiceOverride(),
     ...getFilesServiceOverride(),
     ...getThemeServiceOverride(),
     ...getTextmateServiceOverride(),
     ...getModelServiceOverride(),
     ...getExtensionsServiceOverride(workerConfig),
+    ...getQuickAccessServiceOverride(),
     ...getLanguagesServiceOverride(),
     ...getConfigurationServiceOverride(),
     ...getDialogServiceOverride(),
+    ...getSearchServiceOverride(),
     ...getExplorerServiceOverride(),
     ...getOutputServiceOverride(),
     ...getMarkersServiceOverride(),
@@ -92,7 +92,7 @@ await initialize(
     ...getTerminalServiceOverride(new WebContainerTerminalBackend()),
     ...getPreferencesServiceOverride(),
   },
-  document.body,
+  document.getElementById('app')!,
   {
     workspaceProvider: {
       trusted: true,
@@ -103,8 +103,25 @@ await initialize(
         return false;
       },
     },
+    productConfiguration: {
+      nameLong: 'Webcontainer Editor',
+      nameShort: 'Webcontainer Editor',
+      version: '0.0.1',
+    },
   }
 );
+
+await registerExtension(
+  {
+    name: 'Webcontainer Editor',
+    publisher: 'caleb1248',
+    version: '0.0.1',
+    engines: {
+      vscode: '*',
+    },
+  },
+  ExtensionHostKind.LocalProcess
+).setAsDefaultApi();
 
 attachPart(Parts.SIDEBAR_PART, document.getElementById('sidebar')!);
 attachPart(Parts.EDITOR_PART, document.getElementById('editor')!);

@@ -200,7 +200,13 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
   private _fileChangedEmitter = new Emitter<IFileChange[]>();
   onDidChangeFile = this._fileChangedEmitter.event;
 
-  private constructor() {}
+  private constructor() {
+    this.onDidChangeFile((e) => {
+      if (e[0].type == FileChangeType.ADDED) {
+        console.log('file added', e[0].resource.path);
+      }
+    });
+  }
 
   public static async create() {
     const fileSystem = new WebContainerFileSystemProvider();
@@ -229,7 +235,7 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
 
   public watch(uri: URI) {
     // Unsupported - watches all files.
-    // console.log('watching path', uri.toString());
+    console.log('watching path', uri.toString());
     return Disposable.None;
   }
 

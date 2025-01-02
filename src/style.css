@@ -8,10 +8,10 @@ div#app {
   font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
 }
 
-div#app {
+/* div#app {
   display: flex;
   max-height: 100%;
-}
+} */
 
 div#sidebar {
   width: 200px;
@@ -49,4 +49,8 @@ div#editor {
 
 :root {
   overflow: hidden;
+}
+
+#workbench\.parts\.activitybar>div>div:nth-child(3)>div>ul>li:nth-child(1)>a {
+  display: none;
 }
