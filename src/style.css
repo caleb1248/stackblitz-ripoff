@@ -1,3 +1,40 @@
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v18/UcCo3FwrK3iLTcviYwY.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
+:root {
+  overflow: hidden;
+  max-height: 100%;
+}
+
+h1 {
+  font-size: 4rem;
+}
+
+/* prettier-ignore */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 400;
+}
+
+button {
+  background: transparent;
+  color: inherit;
+  border: none;
+  cursor: pointer;
+}
+
 html,
 body,
 div#app {
@@ -5,22 +42,26 @@ div#app {
   padding: 0;
   width: 100%;
   height: 100%;
-  font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
-/* div#app {
+div#app {
   display: flex;
   max-height: 100%;
-} */
+}
 
 div#sidebar {
-  width: 200px;
+  width: 270px;
 }
 
 div#main {
   flex-grow: 1;
   display: grid;
+  top: 0;
   grid-template-rows: minmax(0, 1fr) 200px;
+  /* position: fixed;
+  top: 0;
+  left: 200px; */
   scrollbar-width: none;
 }
 
@@ -43,12 +84,39 @@ div#editor {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+  text-align: center;
   z-index: 9999;
   color: white;
 }
 
-:root {
-  overflow: hidden;
+.start-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  /* border: 1px solid white; */
+  border-radius: 15px;
+  width: fit-content;
+  margin: auto;
+}
+
+.folder-upload {
+  border-radius: 15px;
+  background: #1f1f1f;
+  color: white;
+  font-size: 1.25rem;
+  padding: 1.7rem;
+  transition: all 0.2s;
+}
+
+.folder-upload:hover {
+  filter: brightness(110%);
+  border-radius: 20px;
+}
+
+.go {
+  background-color: rgb(17, 135, 47);
 }
 
 #workbench\.parts\.activitybar>div>div:nth-child(3)>div>ul>li:nth-child(1)>a {

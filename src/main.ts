@@ -1,6 +1,3 @@
-// Language feature extensions are not currently working, I will implement them for webcontainer in the future.
-
-import './style.css';
 import './setup';
 import * as vscode from 'vscode';
 
@@ -25,5 +22,6 @@ import '@codingame/monaco-vscode-css-default-extension';
 // import '@codingame/monaco-vscode-css-language-features-default-extension';
 
 await import('./webcontainer/preview');
+await import('./webcontainer/file-sync');
 await vscode.commands.executeCommand('workbench.view.explorer');
 document.getElementById('loading-screen')?.remove();
