@@ -33,7 +33,7 @@ import WebContainerFileSystemProvider from './webcontainer/fileSystem';
 import { registerExtension } from 'vscode/extensions';
 
 const provider = await WebContainerFileSystemProvider.create();
-document.getElementById('loading-screen')!.innerHTML = 'Loading vscode...';
+document.getElementById('loading-screen')!.innerHTML = 'Initializing the editor...';
 registerFileSystemOverlay(1, provider);
 
 export type WorkerLoader = () => Worker;

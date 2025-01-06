@@ -41,7 +41,11 @@ async function readRecursive(dirHandle: FileSystemDirectoryHandle, baseHandle = 
 
 loadingScreen.innerHTML = 'Initializing files...';
 
-await webContainer.mount(await readRecursive(globalThis.currentHandle));
+export async function mountHandle(handle: FileSystemDirectoryHandle) {
+  return await webContainer.mount(await readRecursive(handle));
+}
+
+await mountHandle(globalThis.currentHandle);
 
 const portMap = new Map<number, string>();
 webContainer.on('port', (port, type, url) => {

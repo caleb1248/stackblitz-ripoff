@@ -21,13 +21,14 @@ loadingScreen.innerHTML = html`<div>
     <button class="folder-upload go">Go</button>
   </div>
 </div>`;
-loadingScreen.querySelector('.folder-upload')?.addEventListener('click', async () => {
+loadingScreen.querySelector('.folder-upload')?.addEventListener('click', async function (this: HTMLButtonElement) {
   try {
     const handle = await window.showDirectoryPicker({
       mode: 'readwrite',
     });
 
     globalThis.currentHandle = handle;
+    this.innerHTML = 'Select folder<br><small>' + handle.name.replace('<', '&lt') + '</small>';
   } catch (e) {
     console.error(e);
   }

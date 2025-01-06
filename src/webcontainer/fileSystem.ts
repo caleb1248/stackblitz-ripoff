@@ -29,16 +29,20 @@ import { BaseTransports, Connection, createConnection, Message } from 'portabler
 async function createNodeStatProgram() {
   // WebContainer doesn't support writing files outside of home/projects, so we need create a file to create the stat file outisde of home/projects. Then we can delete the file.
   await webContainer.fs.writeFile(
-    '/statprogramcreate.js',
+    '/statprogramcreate.cjs',
     `const fs = require('fs');
 fs.mkdirSync('/home/.editor-internal');
 fs.writeFileSync('/home/.editor-internal/statrpc.js', ${JSON.stringify(statrpcBackend)});`
   );
 
-  const statProgramCreator = await webContainer.spawn('node', ['statprogramcreate.js']);
-  await statProgramCreator.exit;
+  const statProgramCreator = await webContainer.spawn('node', ['statprogramcreate.cjs']);
+  statProgramCreator.output.pipeTo(new WritableStream({ write: console.log }));
+  const code = await statProgramCreator.exit;
+  if (code !== 0) {
+    throw new Error('Failed to create stat program');
+  }
 
-  await webContainer.fs.rm('/statprogramcreate.js', { force: true });
+  await webContainer.fs.rm('/statprogramcreate.cjs', { force: true });
 }
 
 interface StatResult {
@@ -130,7 +134,7 @@ class StatRpc {
               if ('params' in parsed) return;
               this._transports.fireMessage(parsed);
             } else {
-              console.log('what?');
+              console.log('sus message received', data);
             }
           },
         })
@@ -248,7 +252,10 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
         e instanceof StatRpcError && e.code === 'ENOENT'
           ? FileSystemProviderErrorCode.FileNotFound
           : FileSystemProviderErrorCode.Unknown;
-      throw FileSystemProviderError.create(new Error('Error'), code);
+      throw FileSystemProviderError.create(
+        ((<{ code: string }>e).code || e?.toString() || 'Error') + ` while trying to stat ${resource.toString()}`,
+        code
+      );
     }
   }
 
