@@ -207,6 +207,7 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
   private constructor() {
     this.onDidChangeFile((e) => {
       if (e[0].type == FileChangeType.ADDED) {
+        if (e[0].resource.path.includes('node_modules')) return;
         console.log('file added', e[0].resource.path);
       }
     });

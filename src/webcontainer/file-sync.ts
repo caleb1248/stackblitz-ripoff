@@ -1,3 +1,4 @@
+import { FileSystemTree } from '@webcontainer/api';
 import webContainer from './init';
 import { ExtensionHostKind, registerExtension } from 'vscode/extensions';
 
@@ -14,8 +15,8 @@ const api = await registerExtension(
       commands: [
         {
           command: 'localFileSynchronizer.sync',
-          title: 'Sync workspace to local file system',
-          category: 'Local File Synchronizer',
+          title: 'Push files to local file system',
+          category: 'File Sync',
         },
       ],
     },
@@ -27,6 +28,7 @@ if (globalThis.autoSyncFiles) {
   webContainer.fs.watch('/', { recursive: true }, async (type, name) => {
     name = name as string;
     const fsName = '/home/projects/' + name;
+    if (name.includes('node_modules')) return;
     if (type === 'rename') {
       console.log('rename', fsName);
       try {
@@ -57,7 +59,7 @@ if (globalThis.autoSyncFiles) {
       console.log('change', fsName);
       try {
         const data = await webContainer.fs.readFile(name, 'utf-8');
-        console.log(data);
+        // console.log(data);
         const parent = name.split('/').slice(0, -1).join('/');
         try {
           const parentHandle = await getDir(parent);
@@ -96,4 +98,38 @@ api.commands.registerCommand('localFileSynchronizer.sync', async () => {
 
   const tree = await webContainer.export('');
   console.log(tree);
+  await syncToDiskRecursive(tree, handle);
 });
+
+function syncToDiskRecursive(tree: FileSystemTree, handle: FileSystemDirectoryHandle) {
+  const promises: Promise<void>[] = [];
+  for (const item in tree) {
+    if (item.includes('node_modules')) continue;
+    const entry = tree[item];
+    if ('file' in entry) {
+      if ('symlink' in entry.file) {
+        // Symlinks are not supported in the file system access api
+        console.warn('Symlinks are not supported in the file system access api');
+        continue;
+      }
+
+      const contents = entry.file.contents;
+
+      promises.push(
+        handle
+          .getFileHandle(item, { create: true })
+          .then((fileHandle) => fileHandle.createWritable())
+          .then((writable) => writable.write(contents).then(() => writable.close()))
+      );
+    } else {
+      // Directory
+      promises.push(
+        handle.getDirectoryHandle(item, { create: true }).then((dirHandle) => {
+          syncToDiskRecursive(entry.directory, dirHandle);
+        })
+      );
+    }
+  }
+
+  return Promise.all(promises);
+}
