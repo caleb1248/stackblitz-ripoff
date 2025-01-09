@@ -1,7 +1,8 @@
 import { FileSystemTree } from '@webcontainer/api';
 import webContainer, { toRelativePath, workdirPath } from './init';
 import { ExtensionHostKind, registerExtension } from 'vscode/extensions';
-import { readRecursive } from './init';
+
+let pullingInProgress = false;
 
 const api = await registerExtension(
   {
@@ -32,6 +33,7 @@ const api = await registerExtension(
 
 if (globalThis.autoSyncFiles) {
   webContainer.fs.watch('/', { recursive: true }, async (type, name) => {
+    if (pullingInProgress) return;
     name = name as string;
     const fsName = `${workdirPath}/${name}`;
     if (name.includes('node_modules')) return;
@@ -146,12 +148,37 @@ api.commands.registerCommand('localFileSynchronizer.pull', async () => {
     return;
   }
 
-  const tree = await readRecursive(handle);
-  const removalProcess = await webContainer.spawn('jsh');
-  await removalProcess.input.getWriter().write('rm -rf ./**\n');
-  removalProcess.output.pipeTo(new WritableStream({ write: (c) => console.error(c) }));
-  await removalProcess.exit;
-  console.error('removed all files');
-
-  await webContainer.mount(tree, { mountPoint: '/' });
+  pullingInProgress = true;
+  await pullRecursive(handle);
+  pullingInProgress = false;
 });
+
+async function pullRecursive(directoryHandle: FileSystemDirectoryHandle, basePath = '/') {
+  const promises: Promise<void>[] = [];
+
+  const existingEntryNames = new Set(await webContainer.fs.readdir(basePath));
+
+  for await (const entry of directoryHandle.values()) {
+    const path = `${basePath}${entry.name}`;
+    await webContainer.fs.rm(path, { force: true, recursive: true });
+    if (entry.kind === 'file') {
+      promises.push(
+        entry
+          .getFile()
+          .then((file) => file.arrayBuffer())
+          .then((buffer) => webContainer.fs.writeFile(path, new Uint8Array(buffer)))
+          .catch((e) => console.error(e))
+      );
+    } else if (entry.kind === 'directory') {
+      promises.push(webContainer.fs.mkdir(path).then(() => pullRecursive(entry, `${path}/`)));
+    }
+
+    existingEntryNames.delete(entry.name);
+  }
+
+  for (const name of existingEntryNames) {
+    promises.push(webContainer.fs.rm(`${basePath}${name}`, { recursive: true, force: true }));
+  }
+
+  await Promise.all(promises);
+}
