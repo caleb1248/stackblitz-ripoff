@@ -313,13 +313,4 @@ connection.onRequest('readdir', async (params) => {
   }
 });
 
-// Uncomment this when WebContainer upgrades to node 20
-// fs.watch('/home/projects', { recursive: true, encoding: 'utf-8' }, (event, fileName) => {
-//   if (!fileName) return;
-
-//   const exists = fs.existsSync(fileName);
-
-//   connection.sendNotification('fileChanged', {type: event === 'change' ? 'change' : exists ? 'create' : 'delete', path: fileName});
-// });
-
 console.log('ready');

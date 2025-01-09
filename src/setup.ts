@@ -31,6 +31,7 @@ import { workerConfig } from './tools/extHostWorker';
 import { WebContainerTerminalBackend } from './webcontainer/terminal';
 import WebContainerFileSystemProvider from './webcontainer/fileSystem';
 import { registerExtension } from 'vscode/extensions';
+import { workdirPath } from './webcontainer/init';
 
 const provider = await WebContainerFileSystemProvider.create();
 document.getElementById('loading-screen')!.innerHTML = 'Initializing the editor...';
@@ -52,6 +53,7 @@ const workerLoaders: Partial<Record<string, WorkerLoader>> = {
   LocalFileSearchWorker: () =>
     new Worker(new URL('@codingame/monaco-vscode-search-service-override/worker', import.meta.url), { type: 'module' }),
 };
+
 window.MonacoEnvironment = {
   getWorker: function (moduleId, label) {
     const workerFactory = workerLoaders[label];
@@ -97,7 +99,7 @@ await initialize(
     workspaceProvider: {
       trusted: true,
       workspace: {
-        folderUri: Uri.file('/home/projects'),
+        folderUri: Uri.file(workdirPath),
       },
       async open() {
         return false;

@@ -1,5 +1,5 @@
 import type { WebContainerProcess } from '@webcontainer/api';
-import webContainer from './init';
+import webContainer, { toRelativePath } from './init';
 import {
   FileChangeType,
   FilePermission,
@@ -27,7 +27,7 @@ import { BaseTransports, Connection, createConnection, Message } from 'portabler
 // We will use stdio to communicate with the process.
 
 async function createNodeStatProgram() {
-  // WebContainer doesn't support writing files outside of home/projects, so we need create a file to create the stat file outisde of home/projects. Then we can delete the file.
+  // WebContainer doesn't support writing files outside of the working directory, so we need create a file to create the stat file outisde of the working directory. Then we can delete the file.
   await webContainer.fs.writeFile(
     '/statprogramcreate.cjs',
     `const fs = require('fs');
@@ -267,7 +267,7 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
     }
 
     try {
-      return await webContainer.fs.readFile(resource.path.replace(/^\/home\/projects/, ''));
+      return await webContainer.fs.readFile(toRelativePath(resource.path));
     } catch (e) {
       throw FileSystemProviderError.create('File not found', FileSystemProviderErrorCode.FileNotFound);
     }
@@ -281,10 +281,7 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
     if (opts.overwrite && (await this.exists(to))) {
       throw FileSystemProviderError.create('Destination already exists', FileSystemProviderErrorCode.FileExists);
     } else {
-      await webContainer.fs.rename(
-        from.path.replace(/^\/home\/projects/, ''),
-        to.path.replace(/^\/home\/projects/, '')
-      );
+      await webContainer.fs.rename(toRelativePath(from.path), toRelativePath(to.path));
     }
   }
 
@@ -299,16 +296,16 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
       throw FileSystemProviderError.create('File not found', FileSystemProviderErrorCode.FileNotFound);
     }
 
-    console.log(resource.path.replace(/^\/home\/projects/, ''));
-    await webContainer.fs.writeFile(resource.path.replace(/^\/home\/projects/, ''), content);
+    console.log(toRelativePath(resource.path));
+    await webContainer.fs.writeFile(toRelativePath(resource.path), content);
   }
 
   async mkdir(resource: URI): Promise<void> {
-    await webContainer.fs.mkdir(resource.path.replace(/^\/home\/projects/, ''));
+    await webContainer.fs.mkdir(toRelativePath(resource.path));
   }
 
   async delete(resource: URI, opts: IFileDeleteOptions): Promise<void> {
-    await webContainer.fs.rm(resource.path.replace(/^\/home\/projects/, ''), {
+    await webContainer.fs.rm(toRelativePath(resource.path), {
       recursive: opts.recursive,
     });
   }

@@ -4,8 +4,11 @@ const loadingScreen = document.getElementById('loading-screen')!;
 
 loadingScreen.innerHTML = 'Booting Webcontainer...';
 
+const workdirName = globalThis.currentHandle.name;
+const workdirPath = '/home/' + workdirName;
+
 const webContainer = await WebContainer.boot({
-  workdirName: 'projects',
+  workdirName,
 });
 
 async function readRecursive(dirHandle: FileSystemDirectoryHandle, baseHandle = dirHandle): Promise<FileSystemTree> {
@@ -56,5 +59,9 @@ webContainer.on('port', (port, type, url) => {
   }
 });
 
+function toRelativePath(path: string) {
+  return path.replace('\\', '/').replace(new RegExp(String.raw`^${workdirPath}/`), '');
+}
+
 export default webContainer;
-export { portMap };
+export { portMap, readRecursive, workdirName, workdirPath, toRelativePath };

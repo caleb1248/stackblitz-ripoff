@@ -1,6 +1,7 @@
 import { FileSystemTree } from '@webcontainer/api';
-import webContainer from './init';
+import webContainer, { toRelativePath, workdirPath } from './init';
 import { ExtensionHostKind, registerExtension } from 'vscode/extensions';
+import { readRecursive } from './init';
 
 const api = await registerExtension(
   {
@@ -14,8 +15,13 @@ const api = await registerExtension(
     contributes: {
       commands: [
         {
-          command: 'localFileSynchronizer.sync',
+          command: 'localFileSynchronizer.push',
           title: 'Push files to local file system',
+          category: 'File Sync',
+        },
+        {
+          command: 'localFileSynchronizer.pull',
+          title: 'Pull files from local file system',
           category: 'File Sync',
         },
       ],
@@ -27,7 +33,7 @@ const api = await registerExtension(
 if (globalThis.autoSyncFiles) {
   webContainer.fs.watch('/', { recursive: true }, async (type, name) => {
     name = name as string;
-    const fsName = '/home/projects/' + name;
+    const fsName = `${workdirPath}/${name}`;
     if (name.includes('node_modules')) return;
     if (type === 'rename') {
       console.log('rename', fsName);
@@ -79,7 +85,7 @@ if (globalThis.autoSyncFiles) {
 }
 
 async function getDir(path: string, create = false) {
-  const relativePath = path.replace('\\', '/').replace(/^\/home\/projects/, '');
+  const relativePath = toRelativePath(path);
   const segments = relativePath.split('/');
   let handle = globalThis.currentHandle;
   for (const segment of segments) {
@@ -89,17 +95,6 @@ async function getDir(path: string, create = false) {
 
   return handle;
 }
-
-api.commands.registerCommand('localFileSynchronizer.sync', async () => {
-  const handle = globalThis.currentHandle;
-  if (!handle) {
-    return;
-  }
-
-  const tree = await webContainer.export('');
-  console.log(tree);
-  await syncToDiskRecursive(tree, handle);
-});
 
 function syncToDiskRecursive(tree: FileSystemTree, handle: FileSystemDirectoryHandle) {
   const promises: Promise<void>[] = [];
@@ -133,3 +128,30 @@ function syncToDiskRecursive(tree: FileSystemTree, handle: FileSystemDirectoryHa
 
   return Promise.all(promises);
 }
+
+api.commands.registerCommand('localFileSynchronizer.sync', async () => {
+  const handle = globalThis.currentHandle;
+  if (!handle) {
+    return;
+  }
+
+  const tree = await webContainer.export('');
+  console.log(tree);
+  await syncToDiskRecursive(tree, handle);
+});
+
+api.commands.registerCommand('localFileSynchronizer.pull', async () => {
+  const handle = globalThis.currentHandle;
+  if (!handle) {
+    return;
+  }
+
+  const tree = await readRecursive(handle);
+  const removalProcess = await webContainer.spawn('jsh');
+  await removalProcess.input.getWriter().write('rm -rf ./**\n');
+  removalProcess.output.pipeTo(new WritableStream({ write: (c) => console.error(c) }));
+  await removalProcess.exit;
+  console.error('removed all files');
+
+  await webContainer.mount(tree, { mountPoint: '/' });
+});
