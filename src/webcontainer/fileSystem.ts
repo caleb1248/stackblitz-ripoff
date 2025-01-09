@@ -17,7 +17,6 @@ import {
 import { URI } from 'vscode/vscode/vs/base/common/uri';
 import { Emitter, Event } from 'vscode/vscode/vs/base/common/event';
 import statrpcBackend from './statrpc-backend?raw';
-import { Disposable } from 'vscode/vscode/vs/base/common/lifecycle';
 import { BaseTransports, Connection, createConnection, Message } from 'portablerpc';
 
 // Look at https://github.com/microsoft/vscode/blob/main/src/vs/platform/files/node/diskFileSystemProvider.ts
@@ -238,10 +237,9 @@ class WebContainerFileSystemProvider implements IFileSystemProviderWithFileReadW
     return fileSystem;
   }
 
-  public watch(uri: URI) {
-    // Unsupported - watches all files.
-    console.log('watching path', uri.toString());
-    return Disposable.None;
+  public watch(_uri: URI) {
+    // console.log('watching path', uri.toString());
+    return { dispose() {} };
   }
 
   public async stat(resource: URI): Promise<IStat> {
