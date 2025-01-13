@@ -47,7 +47,11 @@ if (globalThis.autoSyncFiles) {
           const parent = name.split('/').slice(0, -1).join('/');
           try {
             const parentHandle = await getDir(parent, true);
-            await parentHandle.getFileHandle(name.split('/').pop() as string, { create: true });
+            const fileHandle = await parentHandle.getFileHandle(name.split('/').pop() as string, { create: true });
+            const writable = await fileHandle.createWritable();
+            const contents = await webContainer.fs.readFile(name);
+            await writable.write(contents);
+            await writable.close();
           } catch (e) {
             console.warn('Failed to create file', name + ':', e);
           }
@@ -58,7 +62,7 @@ if (globalThis.autoSyncFiles) {
         const parent = name.split('/').slice(0, -1).join('/');
         try {
           const parentHandle = await getDir(parent);
-          await parentHandle.removeEntry(name.split('/').pop() as string);
+          await parentHandle.removeEntry(name.split('/').pop() as string, { recursive: true });
         } catch (e) {
           console.warn('Failed to remove file', name + ':', e);
         }
