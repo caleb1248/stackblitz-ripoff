@@ -39,6 +39,9 @@ export default defineConfig({
       plugins: [importMetaUrlPlugin],
     },
   },
+  worker: {
+    format: "es"
+  },
   server: {
     port: 5173,
     fs: {
