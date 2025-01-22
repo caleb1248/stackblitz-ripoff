@@ -50,7 +50,7 @@
     "@codingame/monaco-vscode-workbench-service-override": "^11.1.2",
     "@webcontainer/api": "^1.5.1",
     "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@^11.1.2",
-    "portablerpc": "^1.0.3",
+    "portablerpc": "^1.0.4",
     "typescript": "^5.5.4",
     "vscode": "npm:@codingame/monaco-vscode-api@^11.1.2"
   }

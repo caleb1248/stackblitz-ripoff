@@ -17,7 +17,7 @@ import {
 import { URI } from 'vscode/vscode/vs/base/common/uri';
 import { Emitter, Event } from 'vscode/vscode/vs/base/common/event';
 import statrpcBackend from './statrpc-backend?raw';
-import { BaseTransports, Connection, createConnection, Message } from 'portablerpc';
+import { BaseTransports, Connection, createConnection, Message, ValidJsonObject } from 'portablerpc';
 
 // Look at https://github.com/microsoft/vscode/blob/main/src/vs/platform/files/node/diskFileSystemProvider.ts
 // Also look at https://github.com/microsoft/vscode/blob/main/src/vs/base/node/pfs.ts
@@ -44,31 +44,31 @@ fs.writeFileSync('/home/.editor-internal/statrpc.js', ${JSON.stringify(statrpcBa
   await webContainer.fs.rm('/statprogramcreate.cjs', { force: true });
 }
 
-interface StatResult {
+interface StatResult extends ValidJsonObject {
   ctime: number;
   mtime: number;
   size: number;
-  permissions: 'locked' | undefined;
+  permissions: 'locked';
   type: 'file' | 'directory' | 'unknown';
   isSymlink: boolean;
 }
 
-interface StatError {
+interface StatError extends ValidJsonObject {
   error: string;
 }
 
-interface Dirent {
+interface Dirent extends ValidJsonObject {
   name: string;
   type: 'directory' | 'file' | 'unknown';
   isSymlink: boolean;
 }
 
-interface ReaddirResult {
-  result: Array<Dirent>;
+interface ReaddirResult extends ValidJsonObject, Record<string, unknown> {
+  result: Dirent[];
 }
 interface ReaddirError extends StatError {}
 
-interface ExistsResult {
+interface ExistsResult extends ValidJsonObject {
   exists: boolean;
 }
 
@@ -147,7 +147,7 @@ class StatRpc {
     const path = uri.path;
 
     const result = await this.connection.sendRequest<StatResult | StatError>('stat', { path });
-    if ('error' in result) throw new StatRpcError(result.error);
+    if (result.error) throw new StatRpcError(result.error as string);
 
     let type: FileType;
     switch (result.type) {
@@ -165,9 +165,9 @@ class StatRpc {
 
     return {
       type,
-      mtime: result.mtime,
-      ctime: result.ctime,
-      size: result.size,
+      mtime: result.mtime as number,
+      ctime: result.ctime as number,
+      size: result.size as number,
       permissions: result.permissions === 'locked' ? FilePermission.Locked : undefined,
     };
   }
@@ -180,7 +180,7 @@ class StatRpc {
   public async readdir(path: URI) {
     const result = await this.connection.sendRequest<ReaddirResult | ReaddirError>('readdir', { path: path.path });
     if ('error' in result) {
-      throw new StatRpcError(result.error);
+      throw new StatRpcError(result.error as string);
     }
     return result.result;
   }
