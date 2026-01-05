@@ -1,6 +1,6 @@
 import { FileSystemTree } from '@webcontainer/api';
 import webContainer, { toRelativePath, workdirPath } from './init';
-import { ExtensionHostKind, registerExtension } from 'vscode/extensions';
+import { ExtensionHostKind, registerExtension } from '@codingame/monaco-vscode-api/extensions';
 
 let pullingInProgress = false;
 
@@ -50,7 +50,7 @@ if (globalThis.autoSyncFiles) {
             const fileHandle = await parentHandle.getFileHandle(name.split('/').pop() as string, { create: true });
             const writable = await fileHandle.createWritable();
             const contents = await webContainer.fs.readFile(name);
-            await writable.write(contents);
+            await writable.write(contents as Uint8Array<ArrayBuffer>);
             await writable.close();
           } catch (e) {
             console.warn('Failed to create file', name + ':', e);
@@ -120,7 +120,7 @@ function syncToDiskRecursive(tree: FileSystemTree, handle: FileSystemDirectoryHa
         handle
           .getFileHandle(item, { create: true })
           .then((fileHandle) => fileHandle.createWritable())
-          .then((writable) => writable.write(contents).then(() => writable.close()))
+          .then((writable) => writable.write(contents as Uint8Array<ArrayBuffer>).then(() => writable.close()))
       );
     } else {
       // Directory

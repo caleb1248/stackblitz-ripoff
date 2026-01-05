@@ -1,4 +1,4 @@
-import { initialize } from 'vscode/services';
+import { initialize } from '@codingame/monaco-vscode-api/services';
 import getTextmateServiceOverride from '@codingame/monaco-vscode-textmate-service-override';
 import getThemeServiceOverride from '@codingame/monaco-vscode-theme-service-override';
 import getModelServiceOverride from '@codingame/monaco-vscode-model-service-override';
@@ -27,10 +27,9 @@ import 'vscode/localExtensionHost';
 import { Uri } from 'vscode';
 
 import { Worker } from './tools/crossOriginWorker';
-import { workerConfig } from './tools/extHostWorker';
 import { WebContainerTerminalBackend } from './webcontainer/terminal';
 import WebContainerFileSystemProvider from './webcontainer/fileSystem';
-import { registerExtension } from 'vscode/extensions';
+import { registerExtension } from '@codingame/monaco-vscode-api/extensions';
 import { workdirPath } from './webcontainer/init';
 
 const provider = await WebContainerFileSystemProvider.create();
@@ -81,7 +80,7 @@ await initialize(
     ...getThemeServiceOverride(),
     ...getTextmateServiceOverride(),
     ...getModelServiceOverride(),
-    ...getExtensionsServiceOverride(workerConfig),
+    ...getExtensionsServiceOverride({ enableWorkerExtensionHost: true }),
     ...getQuickAccessServiceOverride(),
     ...getLanguagesServiceOverride(),
     ...getConfigurationServiceOverride(),

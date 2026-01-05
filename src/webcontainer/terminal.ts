@@ -1,12 +1,12 @@
 import { ITerminalChildProcess, SimpleTerminalBackend } from '@codingame/monaco-vscode-terminal-service-override';
 import webContainer from './init';
-import { IProcessEnvironment } from 'vscode/vscode/vs/base/common/platform';
+import { IProcessEnvironment } from '@codingame/monaco-vscode-api/vscode/vs/base/common/platform';
 import {
   IProcessReadyEvent,
   IShellLaunchConfig,
   ITerminalProcessOptions,
-} from 'vscode/vscode/vs/platform/terminal/common/terminal';
-import { Emitter, Event } from 'vscode/vscode/vs/base/common/event';
+} from '@codingame/monaco-vscode-api/vscode/vs/platform/terminal/common/terminal';
+import { Emitter, Event } from '@codingame/monaco-vscode-api/vscode/vs/base/common/event';
 import { SpawnOptions, WebContainerProcess } from '@webcontainer/api';
 
 let pidCount = 0;
@@ -93,7 +93,7 @@ class WebContainerTerminalProcess implements ITerminalChildProcess {
       for (const [key, value] of Object.entries(this._options.shellLaunchConfig.env)) {
         if (value) {
           if (!spawnOptions.env) spawnOptions.env = {};
-          spawnOptions.env[key] = value;
+          spawnOptions.env[key] = value as any;
         }
       }
     }
@@ -182,6 +182,8 @@ class WebContainerTerminalProcess implements ITerminalChildProcess {
   acknowledgeDataEvent() {}
 
   getLatency = async () => 0;
+
+  sendSignal() {} // not supported
 }
 
 class InputQueue {

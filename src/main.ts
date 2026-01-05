@@ -20,7 +20,7 @@ import '@codingame/monaco-vscode-html-default-extension';
 
 import '@codingame/monaco-vscode-css-default-extension';
 // import '@codingame/monaco-vscode-css-language-features-default-extension';
-
+console.log('test');
 await import('./webcontainer/preview');
 await import('./webcontainer/file-sync');
 await vscode.commands.executeCommand('workbench.view.explorer');

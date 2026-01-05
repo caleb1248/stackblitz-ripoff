@@ -2,14 +2,19 @@ import { WebContainer, FileSystemTree } from '@webcontainer/api';
 
 const loadingScreen = document.getElementById('loading-screen')!;
 
-loadingScreen.innerHTML = 'Booting Webcontainer...';
-
 const workdirName = globalThis.currentHandle.name;
 const workdirPath = '/home/' + workdirName;
+
+loadingScreen.innerHTML = 'Booting Webcontainer...';
 
 const webContainer = await WebContainer.boot({
   workdirName,
 });
+webContainer.on('error', (err) => {
+  console.error('WebContainer error:', err);
+});
+
+alert('booted!');
 
 async function readRecursive(dirHandle: FileSystemDirectoryHandle, baseHandle = dirHandle): Promise<FileSystemTree> {
   const tree: FileSystemTree = {};

@@ -13,9 +13,9 @@ import {
   IFileSystemProviderWithFileReadWriteCapability,
   IFileWriteOptions,
   IStat,
-} from 'vscode/vscode/vs/platform/files/common/files';
-import { URI } from 'vscode/vscode/vs/base/common/uri';
-import { Emitter, Event } from 'vscode/vscode/vs/base/common/event';
+} from '@codingame/monaco-vscode-api/vscode/vs/platform/files/common/files';
+import { URI } from '@codingame/monaco-vscode-api/vscode/vs/base/common/uri';
+import { Emitter, Event } from '@codingame/monaco-vscode-api/vscode/vs/base/common/event';
 import statrpcBackend from './statrpc-backend?raw';
 import { BaseTransports, Connection, createConnection, Message, ValidJsonObject } from 'portablerpc';
 
