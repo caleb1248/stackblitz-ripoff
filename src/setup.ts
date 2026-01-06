@@ -51,6 +51,7 @@ const workerLoaders: Partial<Record<string, WorkerLoader>> = {
     new Worker(new URL('@codingame/monaco-vscode-output-service-override/worker', import.meta.url), { type: 'module' }),
   LocalFileSearchWorker: () =>
     new Worker(new URL('@codingame/monaco-vscode-search-service-override/worker', import.meta.url), { type: 'module' }),
+  extensionHo: () =>
 };
 
 window.MonacoEnvironment = {
